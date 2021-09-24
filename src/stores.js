@@ -2,37 +2,69 @@ import { writable } from 'svelte/store';
 
 import { gotEm } from './utils';
 
+const defaultData = {
+  totalLift: 18000,
+  liftGainPerOffense: 190,
+  liftLossPerDefense: 40,
+  offensesLeftInSeason: 16,
+  lastDefenseDate: null,
+  liftGoal: 20800,
+};
+
+const savedData = gotEm('thisWeekData', defaultData);
+
+export const thisWeekData = writable(savedData);
+
 export const totalLift = writable(18000);
 export const liftGainPerOffense = writable(190);
 export const liftLossPerDefense = writable(40);
 export const offensesLeftInSeason = writable(16);
 export const lastDefenseDate = writable(null);
 export const liftGoal = writable(20800);
+
+
 export const edit = writable(false);
 
-const defaultShow = new Array(16).fill(true);
-const savedColumns = gotEm('showColumns', defaultShow);
+export const darkMode = writable(false);
 
-export const showColumns = writable(savedColumns);
+export const defaultShow = {
+  season: true,
+  seasonEndDate: true,
+  totalLift: true,
+  liftGainPerOffense: true,
+  liftLossPerDefense: true,
+  liftToGoal: true,
+  offensesToGoal: true,
+  offensesLeftInSeason: true,
+  maxLift: true,
+  minLift: true,
+  defenseMargin: true,
+  defensesCanLose: true,
+  timeToFewerDefenses: true,
+  lastDefenseDate: true,
+  LLCTimeLeft: true,
+  liftGoal: true,
+};
+export const dataKeys = Object.keys(defaultShow);
+const savedShowColumns = gotEm('showColumns', defaultShow);
 
-const defaultData = [
+export const showColumns = writable(savedShowColumns);
+
+const defaultColumns = [
   {
     id: 0,
-    show: true,
     name: 'Season',
     title: '',
     value: 'season',
   },
   {
     id: 1,
-    show: true,
     name: 'Season End Date',
     title: '',
     value: 'seasonEndDate',
   },
   {
     id: 2,
-    show: true,
     name: 'Total Lift',
     title: 'Manually input',
     value: 'totalLift',
@@ -40,7 +72,6 @@ const defaultData = [
   },
   {
     id: 3,
-    show: true,
     name: 'Lift Gain per Offense',
     title: 'Lift gain per single offense, not double',
     value: 'liftGainPerOffense',
@@ -48,7 +79,6 @@ const defaultData = [
   },
   {
     id: 4,
-    show: true,
     name: 'Lift Loss per Defense',
     title: 'Lift loss per full defense loss',
     value: 'liftLossPerDefense',
@@ -56,63 +86,54 @@ const defaultData = [
   },
   {
     id: 5,
-    show: true,
     name: 'Lift to Goal',
     value: 'liftToGoal',
   },
   {
     id: 6,
-    show: true,
     name: 'Offenses to Goal',
     title: 'Number of single offense matches needed to reach your lift goal',
     value: 'offensesToGoal',
   },
   {
     id: 7,
-    show: true,
-    name: 'Offenses Left in Season',
+    name: 'Offenses Left',
     title: 'Number of single offense matches possible to play (manually input)',
     value: 'offensesLeftInSeason',
     userInput: true,
   },
   {
     id: 8,
-    show: true,
     name: 'Max lift',
     title: 'Maximum lift possible assuming perfect offense',
     value: 'maxLift',
   },
   {
     id: 9,
-    show: true,
     name: 'Min lift',
     title: 'Minimum lift possible assuming perfect offense (lose all defenses)',
     value: 'minLift',
   },
   {
     id: 10,
-    show: true,
     name: 'Defense Margin',
     title: 'The number of full defense losses you can take and still make your goal, assuming perfect offense',
     value: 'defenseMargin',
   },
   {
     id: 11,
-    show: true,
     name: 'Defenses Can Lose',
     title: 'The number of defenses it is possible for you to lose lift on, based on the date of the last non-LLC defense you had',
     value: 'defensesCanLose',
   },
   {
     id: 12,
-    show: true,
     name: 'Time to _ defenses',
     title: 'Time until you can lose one less defense',
     value: 'timeToFewerDefenses',
   },
   {
     id: 13,
-    show: true,
     name: 'Last non-LLC Defense',
     title: 'The date of the last defense you had that was not covered by lift loss control (manually input)',
     value: 'lastDefenseDate',
@@ -120,20 +141,19 @@ const defaultData = [
   },
   {
     id: 14,
-    show: true,
     name: 'LLC Time Left',
     title: 'Time left under lift loss control, based on the date of the last non-LLC defense you had',
     value: 'LLCTimeLeft',
   },
   {
     id: 15,
-    show: true,
     name: 'Lift Goal',
     title: 'Your lift goal (manually input)',
     value: 'liftGoal',
     userInput: true,
   },
 ];
-const savedData = gotEm('thisWeekData', defaultData);
 
-export const thisWeekData = writable(savedData);
+const savedColumns = gotEm('columns', defaultColumns);
+
+export const columnData = writable(savedColumns);
