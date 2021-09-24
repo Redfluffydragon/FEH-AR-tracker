@@ -35,7 +35,7 @@
       <div>{@html data.content}</div>
 
       <div>
-        <button on:click="{showHide}">Save</button>
+        <button on:click="{showHide}" class="saveBtn">Save</button>
         <button on:click="{showHide}">Cancel</button>
       </div>
     </div>

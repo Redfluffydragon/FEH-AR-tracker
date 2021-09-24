@@ -53,12 +53,17 @@ button {
 	cursor: pointer;
 }
 
+button:hover {
+	filter: brightness(1.05);
+}
+
 button:disabled {
 	color: #999;
 }
 
 button:not(:disabled):active {
-	background-color: #ddd;
+	/* background-color: #ddd; */
+	filter: brightness(0.95);
 }
 
 button:focus {
