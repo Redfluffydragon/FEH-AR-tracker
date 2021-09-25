@@ -5,9 +5,11 @@
 	 * paste last defense date in?
 	 * save different lift gain/loss by season
 	 * better dark mode
-	 * add undo for rearranging
 	 * color scheme options
 	 * update time stuff with requestAnimationFrame
+	   * defenses can lose
+		 * time to fewer
+		 * LLC time left
 	 */
 
 	import { dndzone } from 'svelte-dnd-action';
@@ -28,15 +30,16 @@
 	$: localStorage.setItem('showColumns', JSON.stringify($showColumns));
 	$: localStorage.setItem('thisWeekData', JSON.stringify($thisWeekData));
 
-	let tempData = {};
+	let tempShowColumns = {};
+	let tempColumnData = [];
 	let dragDisabled = true;
 
 	function startEdit() {
 		for (let i in dataKeys) {
-			tempData[i] = $showColumns[i];
+			tempShowColumns[i] = $showColumns[i];
 		}
-		// tempData = $showColumns.map(i => i);
-		// $showColumns.forEach((item, idx) => tempData[idx] = item);
+		$columnData.forEach((item, idx) => tempColumnData[idx] = item);
+		
 		$edit = true;
 		setTimeout(() => { // Otherwise the dndZone activates before the hidden columns are shown and it messes everything up
 			dragDisabled = false;
@@ -49,11 +52,11 @@
 	}
 
 	function cancelEdit() {
-		// $showColumns = tempData.map(i => i);
-		// tempData.forEach((item, idx) => $showColumns[idx] = item);
 		for (let i in dataKeys) {
-			$showColumns[i] = tempData[i];
+			$showColumns[i] = tempShowColumns[i];
 		}
+		tempColumnData.forEach((item, idx) => $columnData[idx] = item);
+
 		$edit = false;
 		dragDisabled = true;
 	}
@@ -62,8 +65,6 @@
 	const flipDurationMs = 300;
 	
 	function handleDnd(e) {
-		// console.log(e.detail.items);
-		// items = e.detail.items;
 		$columnData = e.detail.items;
 	}
 
@@ -95,8 +96,9 @@
 		{/each}
 	</div>
 
-	<div>
+	<div class="z-0">
 		{#if $edit}
+			<span>Drag and drop to rearrange</span> <br><br>
 			<button on:click="{saveEdit}" class="saveBtn">Save</button>
 			<button on:click="{cancelEdit}">Cancel</button>
 			<button on:click="{() => {$showColumns = defaultShow}}">Show all</button>
@@ -117,17 +119,18 @@
 
 	<div>
 		<button on:click="{() => localStorage.clear()}">Clear localStorage</button>
-		<br>
-		Edit: {$edit}
-		<br>
-		dragDisabled: {dragDisabled}
 	</div>
 
 </main>
 
 <style>
+	:global(*) {
+		font-weight: 100;
+    color: #000;
+    font-size: 1.02rem;
+	}
+
 	:global(body.dark-mode) {
-		/* background: linear-gradient(90deg, rgb(20, 20, 20), black); */
 		filter: invert(100%);
 	}
 
@@ -152,12 +155,9 @@
 		gap: 1rem;
 		min-height: 100%;
 		box-sizing: border-box;
-		/* background: linear-gradient(135deg, white, lightgray); */
-		/* background-image: url("img/BG-Brave.webp"); */
 	}
 
 	h1 {
-		/* color: hsl(216, 85%, 64%); */
 		color: #000;
 		text-transform: uppercase;
 		font-size: 3rem;
@@ -175,6 +175,7 @@
 
 	.mainGrid {
 		background: rgba(255, 255, 255, 0.9);
+		box-shadow: 5px 5px 50px rgba(0, 0, 0, 0.5);
 		padding: 1rem;
 		position: relative;
 		display: grid;
@@ -185,7 +186,7 @@
 		border-radius: 7px;
 	}
 
-	body[dark-mode = true] {
-		filter: invert(0%);
+	.z-0 {
+		z-index: 0;
 	}
 </style>

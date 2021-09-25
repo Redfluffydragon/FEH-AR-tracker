@@ -15,14 +15,6 @@ const savedData = gotEm('thisWeekData', defaultData);
 
 export const thisWeekData = writable(savedData);
 
-export const totalLift = writable(18000);
-export const liftGainPerOffense = writable(190);
-export const liftLossPerDefense = writable(40);
-export const offensesLeftInSeason = writable(16);
-export const lastDefenseDate = writable(null);
-export const liftGoal = writable(20800);
-
-
 export const edit = writable(false);
 
 export const darkMode = writable(false);
