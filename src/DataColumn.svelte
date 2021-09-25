@@ -1,18 +1,21 @@
 <script>
+  import { onMount, tick } from 'svelte';
+
   export let data;
 
   import {
     edit,
     showColumns,
-    thisWeekData
+    thisWeekData,
+    LLCTimeLeft,
+    timeToFewerDefenses,
+    defensesCanLose
   } from './stores';
 
   import {
 		getEndDate,
 		parseDate,
-		getLLCTimeLeft,
 		getDefensesCanLose,
-		getTimeToFewerDefenses,
 	} from './utils';
 
   $: calculatedValues = {
@@ -23,33 +26,37 @@
     defenseMargin: Math.floor(($thisWeekData.liftGainPerOffense * $thisWeekData.offensesLeftInSeason + $thisWeekData.totalLift - $thisWeekData.liftGoal) / $thisWeekData.liftLossPerDefense),
     maxLift: $thisWeekData.totalLift + $thisWeekData.liftGainPerOffense * $thisWeekData.offensesLeftInSeason,
     minLift: ($thisWeekData.totalLift + $thisWeekData.liftGainPerOffense * $thisWeekData.offensesLeftInSeason) - $thisWeekData.liftLossPerDefense * getDefensesCanLose($thisWeekData.lastDefenseDate),
-    defensesCanLose: getDefensesCanLose($thisWeekData.lastDefenseDate),
-    timeToFewerDefenses: getTimeToFewerDefenses($thisWeekData.lastDefenseDate),
-    LLCTimeLeft: getLLCTimeLeft($thisWeekData.lastDefenseDate, true),
   }
 </script>
 
 {#if $edit || $showColumns[data.value]}
   <div class="column" id="{data.value}">
     <div class="header centerFlex" title="{data.title}">
-      {data.name}
+      {#if data.value === 'timeToFewerDefenses'}
+        Time to {$defensesCanLose - 1} defense{$defensesCanLose == 2 ? '' : 's'}
+      {:else}
+        {data.name}
+      {/if}
     </div>
     {#if !$edit}
       <div id="{data.value + 'Cell'}" class="dataCell centerFlex">
         {#if data.userInput}
           {#if data.value === 'lastDefenseDate'}
             <input type="datetime-local" class="dateInput" bind:value="{$thisWeekData[data.value]}">
-          {:else if data.value === 'totalLift'}
-            <input type="number" pattern="[0-9]*" class="thisSeasonInput" bind:value="{$thisWeekData[data.value]}">
-          {:else if data.value === 'liftGainPerOffense'}
-            <input type="number" pattern="[0-9]*" class="thisSeasonInput" bind:value="{$thisWeekData[data.value]}">
-          {:else if data.value === 'liftLossPerDefense'}
-            <input type="number" pattern="[0-9]*" class="thisSeasonInput" bind:value="{$thisWeekData[data.value]}">
-          {:else if data.value === 'offensesLeftInSeason'}
-            <input type="number" pattern="[0-9]*" class="thisSeasonInput" bind:value="{$thisWeekData[data.value]}">
-          {:else if data.name === 'Lift Goal'}
+          {:else if
+            data.value === 'totalLift' ||
+            data.value === 'liftGainPerOffense' ||
+            data.value === 'liftLossPerDefense' ||
+            data.value === 'offensesLeftInSeason' ||
+            data.value === 'liftGoal'}
             <input type="number" pattern="[0-9]*" class="thisSeasonInput" bind:value="{$thisWeekData[data.value]}">
           {/if}
+        {:else if data.value === 'timeToFewerDefenses'}
+          {$timeToFewerDefenses}
+        {:else if data.value === 'LLCTimeLeft'}
+          {$LLCTimeLeft}
+        {:else if data.value === 'defensesCanLose'}
+          {$defensesCanLose}
         {:else}
           {#if data.value === 'season'}
             <img src="img/astra-and-anima.png" alt="Astra and anima season icons" class="seasonIcon" title="{calculatedValues[data.value]}">
@@ -66,25 +73,15 @@
   </div>
 {/if}
 
-
 <style>
-  * {
-    font-weight: 100;
-    color: #000;
-    font-size: 1.02em;
-  }
-
   .column {
     display: grid;
     grid-template-rows: 1fr 3rem;
-    /* gap: 2px; */
     border: hsl(208, 85%, 64%) solid 2px;
     border-radius: 7px;
   }
   
   .header {
-    /* background-color: rgb(204, 204, 204); */
-    /* background: #00000018; */
     border-bottom: hsl(208, 85%, 64%) solid 1px;
     border-radius: 7px 7px 0 0;
     padding: 7px 9px;
@@ -109,11 +106,6 @@
 
   input[type='number']::-webkit-inner-spin-button { 
     opacity: 1;
-    /* position: absolute;
-    width: 12.5%;
-    height: 100%;
-    top: 0;
-    right: 0; */
   }
 
   .thisSeasonInput {
@@ -132,13 +124,5 @@
   .seasonIcon {
     width: 1.5rem;
     padding: 2px;
-  }
-
-  .pointer {
-    cursor: pointer;
-  }
-
-  .grab {
-    cursor: grab;
   }
 </style>

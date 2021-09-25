@@ -1,17 +1,17 @@
 <script>
 	/**
-	 * Automatically display what season it is
+	 * automatically display what season it is
 	 * input last defense date by number of hours ago
 	 * paste last defense date in?
 	 * save different lift gain/loss by season
 	 * better dark mode
 	 * color scheme options
-	 * update time stuff with requestAnimationFrame
-	   * defenses can lose
-		 * time to fewer
-		 * LLC time left
+	 * cancel edit doesn't work with show all
+	 * settings
+	 * tooltips or something for mobile to see title text?
 	 */
 
+	import { onMount } from 'svelte';
 	import { dndzone } from 'svelte-dnd-action';
 
 	import DataColumn from './DataColumn.svelte';
@@ -24,10 +24,47 @@
 		columnData,
 		defaultShow,
 		darkMode,
-		thisWeekData
+		thisWeekData,
+		LLCTimeLeft,
+		timeToFewerDefenses,
+		defensesCanLose
   } from './stores';
 
+	import { parseTime, getDefensesCanLose } from "./utils";
+	
+	function getLLCTimeLeft(lastDefenseDate) {
+		if (!lastDefenseDate) {
+			return 0;
+		}
+		lastDefenseDate = new Date(lastDefenseDate);
+		const now = new Date();
+		return Math.max((lastDefenseDate.valueOf() + 7.2e+7 - now), 0);
+	}
+
+	function getTimeToFewerDefenses(lastDefenseDate) {
+		lastDefenseDate = new Date(lastDefenseDate);
+
+		if (getDefensesCanLose(lastDefenseDate) <= 0) {
+			return 'N/A';
+		}
+		return parseTime(getDefensesCanLose(lastDefenseDate, false) + getLLCTimeLeft(lastDefenseDate));
+	}
+
+	function updateTimes() {
+		requestAnimationFrame(updateTimes);
+
+		// Add 1 second so it matches up with the time - not sure why it's like this, I just wanted it to line up
+		$LLCTimeLeft = parseTime(getLLCTimeLeft($thisWeekData.lastDefenseDate) + 1000);
+		$timeToFewerDefenses = getTimeToFewerDefenses($thisWeekData.lastDefenseDate);
+		$defensesCanLose = getDefensesCanLose($thisWeekData.lastDefenseDate);
+	}
+
+	onMount(() => {
+		updateTimes();
+	});
+
 	$: localStorage.setItem('showColumns', JSON.stringify($showColumns));
+	$: localStorage.setItem('columnData', JSON.stringify($columnData));
 	$: localStorage.setItem('thisWeekData', JSON.stringify($thisWeekData));
 
 	let tempShowColumns = {};
@@ -62,7 +99,6 @@
 	}
 
 	$: items = $columnData;
-	const flipDurationMs = 300;
 	
 	function handleDnd(e) {
 		$columnData = e.detail.items;
@@ -83,14 +119,14 @@
 	};
 </script>
 
-<img src="img/BG_Brave.webp" alt="" class="background">
+<img src="img/BG_Brave.webp" alt="Background art" class="background">
 
 <main class="flex flexColumn">
 	<h1>FEH AR season lift calculator</h1>
 
 	<Modal data="{settingsData}" />
 
-	<div use:dndzone="{{items, flipDurationMs, dragDisabled}}" on:consider="{handleDnd}" on:finalize="{handleDnd}" class="mainGrid">
+	<div use:dndzone="{{items, dragDisabled}}" on:consider="{handleDnd}" on:finalize="{handleDnd}" class="mainGrid">
 		{#each items as data(data.id)}
 			<DataColumn data="{data}" />
 		{/each}

@@ -15,9 +15,14 @@ const savedData = gotEm('thisWeekData', defaultData);
 
 export const thisWeekData = writable(savedData);
 
+export const LLCTimeLeft = writable(0);
+export const timeToFewerDefenses = writable(0);
+export const defensesCanLose = writable(8);
+
 export const edit = writable(false);
 
 export const darkMode = writable(false);
+
 
 export const defaultShow = {
   season: true,
@@ -121,7 +126,7 @@ const defaultColumns = [
   {
     id: 12,
     name: 'Time to _ defenses',
-    title: 'Time until you can lose one less defense',
+    title: 'Time until it\'s only possible to lose __ defenses',
     value: 'timeToFewerDefenses',
   },
   {
@@ -146,6 +151,6 @@ const defaultColumns = [
   },
 ];
 
-const savedColumns = gotEm('columns', defaultColumns);
+const savedColumns = gotEm('columnData', defaultColumns);
 
 export const columnData = writable(savedColumns);

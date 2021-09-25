@@ -1,5 +1,3 @@
-import { get } from "svelte/store";
-
 /**
  * Get the end date of the current season
  * @returns A date object
@@ -18,37 +16,15 @@ export function getEndDate() {
  * @param {Boolean} round Whether or not to round the number returned
  * @returns Number
  */
-export function getDefensesCanLose(lastDefenseDate, round = true) {
+export function getDefensesCanLose(lastDefenseDate, forDisplay = true) {
   lastDefenseDate = new Date(lastDefenseDate);
-  const now = new Date();
-  const LLCTimeLeft = lastDefenseDate === null ? 0 : lastDefenseDate.valueOf() + 7.2e+7 - now;
-  const correctLLCTimeLeft = Math.max(LLCTimeLeft, 0);
-  if (round === true) {
-    return Math.ceil((getEndDate().valueOf() - now - correctLLCTimeLeft) / 20 / 3600000);
-  }
-  return (getEndDate().valueOf() - now - correctLLCTimeLeft) / 20 / 3600000;
-}
 
-export function getTimeToFewerDefenses(lastDefenseDate) {
-  lastDefenseDate = new Date(lastDefenseDate);
-  if (getDefensesCanLose(lastDefenseDate) <= 0) {
-    return 'N/A';
-  }
-  const defensesCanLoseUnround = getDefensesCanLose(lastDefenseDate, false);
-  // get rid of ms to prevent flickering when out of sync with LLC time left calculation
-  const msTilFewer = Math.trunc((defensesCanLoseUnround - Math.trunc(defensesCanLoseUnround)) * 20 * 3.6e+6 / 1000) * 1000;
-  return parseTime(msTilFewer + getLLCTimeLeft(lastDefenseDate));
-}
-
-export function getLLCTimeLeft(lastDefenseDate, preParse = false) {
-  //pre-parse for display, leave as milliseconds for further calculations
-  if (lastDefenseDate === null) {
-    return 0;
-  }
-  lastDefenseDate = new Date(lastDefenseDate);
   const now = new Date();
-  const LLCTimeLeft = (lastDefenseDate.valueOf() + 7.2e+7 - now);
-  return preParse ? parseTime(Math.max(LLCTimeLeft, 0)) : Math.max(LLCTimeLeft, 0);
+  const LLCTimeLeft = Math.max((lastDefenseDate ? lastDefenseDate.valueOf() + 7.2e+7 - now : 0), 0);
+  const defensesCanLose = (getEndDate().valueOf() - now - LLCTimeLeft);
+
+  // Subtract one from the not for display one just so it matches LLC time left
+  return forDisplay ? Math.ceil(defensesCanLose / 7.2e7) : defensesCanLose % 7.2e7;
 }
 
 /**
