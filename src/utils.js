@@ -23,8 +23,8 @@ export function getDefensesCanLose(lastDefenseDate, forDisplay = true) {
   const LLCTimeLeft = Math.max((lastDefenseDate ? lastDefenseDate.valueOf() + 7.2e+7 - now : 0), 0);
   const defensesCanLose = (getEndDate().valueOf() - now - LLCTimeLeft);
 
-  // Subtract one from the not for display one just so it matches LLC time left
-  return forDisplay ? Math.ceil(defensesCanLose / 7.2e7) : defensesCanLose % 7.2e7;
+  // Subtract one when not-for-display just so it matches LLC time left - don't know why it's like this (modulus probably)
+  return forDisplay ? Math.ceil(defensesCanLose / 7.2e7) : defensesCanLose % 7.2e7 - 1;
 }
 
 /**
