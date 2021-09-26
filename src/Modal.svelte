@@ -1,6 +1,7 @@
 <script>
-  export let data;
-	import { fade } from 'svelte/transition';
+  export let props;
+
+	import { fade, fly } from 'svelte/transition';
 
   let show = false;
   function showHide() {
@@ -24,16 +25,20 @@
   }, false);
 </script>
 
-<button class="icon-btn" on:click="{showHide}">
-  <img src="{data.src}" class="icon-img" alt="Settings icon">
+<button class="openBtn" on:click="{showHide}">
+  {#if props.imageBtn} 
+    <img class="icon-img" src="{props.src}" alt="{props.title} button"/>
+  {:else}
+    {props.title}
+  {/if}
 </button>
 
 {#if show}
   <div class="shadow" transition:fade="{{duration: 200}}">
-    <div class="modal" transition:fade="{{duration: 200}}">
-      <h3>{data.title}</h3>
-      <div>{@html data.content}</div>
-
+    <div class="modal" transition:fly="{{y: -200}}">
+      <h3>{props.title}</h3>
+      <slot name="content"></slot>
+      <br>
       <div>
         <button on:click="{showHide}" class="saveBtn">Save</button>
         <button on:click="{showHide}">Cancel</button>
@@ -44,7 +49,7 @@
 
 
 <style>
-  .icon-btn {
+  .openBtn {
 		position: absolute;
 		width: 2em;
 		height: 2em;
@@ -80,5 +85,6 @@
     width: clamp(min-content, 30vw, 90vw);
     height: min-content;
     z-index: 2;
+    min-width: 25vw;
   }
 </style>
