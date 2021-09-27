@@ -3,7 +3,7 @@
 
 	import { onMount } from 'svelte';
 	import { flip } from "svelte/animate";
-  import { slide, fly, fade } from "svelte/transition";
+  import { fly} from "svelte/transition";
 	import { dndzone } from 'svelte-dnd-action';
 
 	import {
@@ -51,12 +51,14 @@
 
 	onMount(() => {
 		updateTimes();
+    // for some reason Svelte doesn't make it show the bound value on first load of the page
+    document.getElementById('liftGoalInput').value = $thisWeekData.liftGoal;
 	});
 
   $: calculatedValues = {
     season: 'Astra/Anima',
     seasonEndDate: parseDate(getEndDate()).slice(0, -5),
-    liftToGoal: $thisWeekData.liftGoal - $thisWeekData.totalLift,
+    liftToGoal: Math.max($thisWeekData.liftGoal - $thisWeekData.totalLift, 0),
     offensesToGoal: Math.max(Math.ceil(($thisWeekData.liftGoal - $thisWeekData.totalLift) / $thisWeekData.liftGainPerOffense), 0),
     defenseMargin: Math.floor(($thisWeekData.liftGainPerOffense * $thisWeekData.offensesLeftInSeason + $thisWeekData.totalLift - $thisWeekData.liftGoal) / $thisWeekData.liftLossPerDefense),
     maxLift: $thisWeekData.totalLift + $thisWeekData.liftGainPerOffense * $thisWeekData.offensesLeftInSeason,
@@ -91,9 +93,50 @@
                 data.value === 'totalLift' ||
                 data.value === 'liftGainPerOffense' ||
                 data.value === 'liftLossPerDefense' ||
-                data.value === 'offensesLeftInSeason' ||
-                data.value === 'liftGoal'}
+                data.value === 'offensesLeftInSeason'}
                 <input type="number" pattern="[0-9]*" class="thisSeasonInput" bind:value="{$thisWeekData[data.value]}">
+              {:else if data.value === 'liftGoal'}
+                <select name="liftGoal" id="liftGoalInput" bind:value="{$thisWeekData.liftGoal}">
+                  <option value=20100>Tier 39</option>
+                  <option value=20800>Tier 38</option>
+                  <option value=20400>Tier 37</option>
+                  <option value=20000>Tier 36</option>
+                  <option value=19600>Tier 35</option>
+                  <option value=19200>Tier 34</option>
+                  <option value=18800>Tier 33</option>
+                  <option value=18400>Tier 32</option>
+                  <option value=18000>Tier 31</option>
+                  <option value=16400>Tier 30</option>
+                  <option value=16000>Tier 29</option>
+                  <option value=13800>Tier 28</option>
+                  <option value=13400>Tier 27</option>
+                  <option value=13000>Tier 26</option>
+                  <option value=12600>Tier 25</option>
+                  <option value=12200>Tier 24</option>
+                  <option value=11800>Tier 23</option>
+                  <option value=11400>Tier 22</option>
+                  <option value=11000>Tier 21</option>
+                  <option value=9400>Tier 20</option>
+                  <option value=8200>Tier 19</option>
+                  <option value=7200>Tier 18</option>
+                  <option value=6500>Tier 17</option>
+                  <option value=6000>Tier 16</option>
+                  <option value=5600>Tier 15</option>
+                  <option value=5200>Tier 14</option>
+                  <option value=4800>Tier 13</option>
+                  <option value=4400>Tier 12</option>
+                  <option value=4000>Tier 11</option>
+                  <option value=3600>Tier 10</option>
+                  <option value=3200>Tier 9</option>
+                  <option value=2800>Tier 8</option>
+                  <option value=2400>Tier 7</option>
+                  <option value=2000>Tier 6</option>
+                  <option value=1600>Tier 5</option>
+                  <option value=1200>Tier 4</option>
+                  <option value=800>Tier 3</option>
+                  <option value=400>Tier 2</option>
+                  <option value=0>Tier 1</option>
+                </select>
               {/if}
             {:else if data.value === 'timeToFewerDefenses'}
               {$timeToFewerDefenses}
@@ -120,7 +163,7 @@
 
 <style>
   .mainGrid {
-		background: rgba(255, 255, 255, 0.9);
+		background: var(--transparent-bg);
 		box-shadow: 5px 5px 50px rgba(0, 0, 0, 0.5);
 		padding: 1rem;
 		position: relative;
@@ -148,7 +191,7 @@
 
   .dataCell {
     border-radius: 0 0 7px 7px;
-    background: white;
+    background: var(--bg);
   }
 
   .centerFlex {
@@ -157,9 +200,13 @@
     justify-content: center;
   }
 
-  input {
+  input, select {
     margin-top: 0.4rem;
     border-radius: 7px;
+  }
+  
+  input[type=datetime-local]::-webkit-calendar-picker-indicator {
+    filter: invert(var(--invert));
   }
 
   input[type='number']::-webkit-inner-spin-button { 
