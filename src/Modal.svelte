@@ -40,8 +40,8 @@
       <slot name="content"></slot>
       <br>
       <div>
-        <button on:click="{showHide}" class="saveBtn">Save</button>
-        <button on:click="{showHide}">Cancel</button>
+        <button on:click="{showHide}" class="saveBtn">Close</button>
+        <!-- <button on:click="{showHide}">Close</button> -->
       </div>
     </div>
   </div>
@@ -61,6 +61,7 @@
   .icon-img {
     width: 100%;
     height: 100%;
+    filter: invert(var(--invert));
   }
 
   .shadow {
@@ -78,10 +79,10 @@
 
   .modal {
     position: relative;
-    background-color: white;
+    background-color: var(--bg);
     box-shadow: 10px 10px 15px rgba(30, 30, 30, 0.5);
     padding: 20px;
-    border-radius: 15px;
+    border-radius: 7px;
     width: clamp(min-content, 30vw, 90vw);
     height: min-content;
     z-index: 2;

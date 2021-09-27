@@ -21,8 +21,11 @@ export const defensesCanLose = writable(8);
 
 export const edit = writable(false);
 
-export const darkMode = writable(false);
+const savedGoalColor = gotEm('goalColor', false);
+export const goalColor = writable(savedGoalColor);
 
+const savedMode = gotEm('darkMode', false);
+export const darkMode = writable(savedMode);
 
 export const defaultShow = {
   season: true,

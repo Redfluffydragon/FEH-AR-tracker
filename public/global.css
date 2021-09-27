@@ -44,26 +44,8 @@ input:disabled {
 	color: #ccc;
 }
 
-button {
-	color: #333;
-	background-color: #f4f4f4;
-	outline: none;
-	border: none;
-	padding: 7px 10px;
-	cursor: pointer;
-}
-
-button:hover {
-	filter: brightness(1.05);
-}
-
 button:disabled {
 	color: #999;
-}
-
-button:not(:disabled):active {
-	/* background-color: #ddd; */
-	filter: brightness(0.95);
 }
 
 button:focus {
