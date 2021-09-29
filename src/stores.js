@@ -27,22 +27,17 @@ function gotEm(key, value, type = localStorage) {
 
 const defaultData = {
   totalLift: 18000,
-  liftGainPerOffense: 190,
+  liftGainPerOffense: [190, 190],
   liftLossPerDefense: 40,
   offensesLeftInSeason: 16,
   lastDefenseDate: null,
   liftGoal: 20800,
 };
-
 const savedData = gotEm('thisWeekData', defaultData);
-
 export const thisWeekData = writable(savedData);
 
-export const LLCTimeLeft = writable(0);
-export const timeToFewerDefenses = writable(0);
-export const defensesCanLose = writable(8);
-
 export const edit = writable(false);
+
 
 const savedSingleOffenseDisplay = gotEm('singleOffenseDisplay', true);
 export const singleOffenseDisplay = writable(savedSingleOffenseDisplay);
@@ -52,6 +47,9 @@ export const goalColor = writable(savedGoalColor);
 
 const savedMode = gotEm('darkMode', false);
 export const darkMode = writable(savedMode);
+
+const savedZoom = gotEm('zoom', 1);
+export const zoom = writable(savedZoom);
 
 
 export const defaultShow = {

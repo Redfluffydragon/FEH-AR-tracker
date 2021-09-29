@@ -10,6 +10,7 @@
 		goalColor,
 		thisWeekData,
 		singleOffenseDisplay,
+		zoom
   } from './stores';
 
 	/**
@@ -34,6 +35,7 @@
 	$: localStorage.setItem('thisWeekData', JSON.stringify($thisWeekData));
 	$: localStorage.setItem('darkMode', JSON.stringify($darkMode));
 	$: localStorage.setItem('singleOffenseDisplay', JSON.stringify($singleOffenseDisplay));
+	$: localStorage.setItem('zoom', JSON.stringify($zoom));
 
 	onMount(() => {
 		$darkMode && document.body.classList.add('dark-mode');
@@ -44,6 +46,8 @@
 		imageBtn: true,
 		src: 'img/settings-icon.png',
 	}
+
+	$: document.body.style.setProperty('--scale', $zoom);
 </script>
 <div class="background"></div>
 
@@ -52,15 +56,11 @@
 		<button class:active="{!$singleOffenseDisplay}" on:click="{() => {
 			$singleOffenseDisplay = !$singleOffenseDisplay;
 		}}">Display number of double offense matches</button>
-
 		<br>
-
 		<button class:active="{$goalColor}" on:click="{() => {
 			$goalColor = !$goalColor;
 		}}">Color display for goal</button>
-
 		<br>
-
 		<button class:active="{$darkMode}" on:click="{
 			() => {
 				$darkMode ? document.body.classList.remove('dark-mode') : document.body.classList.add('dark-mode');
@@ -68,8 +68,10 @@
 			}
 		}">Dark mode</button>
 		<br>
-		<input type="range" min=1 max=2 step=0.05 value=1 id="zoomSlider">
-		<label for="zoomSlider">Zoom</label>
+		<input type="range" min=1 max=1.5 step=0.05 id="zoomSlider" bind:value="{$zoom}">
+		<label for="zoomSlider">Zoom: {Math.round($zoom * 100)}%</label>
+		<br>
+		<button on:click="{() => localStorage.clear()}">Clear localStorage</button>
 	</div>
 </Modal>
 
@@ -77,10 +79,6 @@
 	<h1>FEH AR season lift calculator</h1>
 
 	<MainTable />
-
-	<div>
-		<button on:click="{() => localStorage.clear()}">Clear localStorage</button>
-	</div>
 
 </main>
 
@@ -103,7 +101,10 @@
 		--bg-img-src: url('img/BG_Alfheim.png');
 		--invert: 0;
 
+		--scale: 1;
+
 		background: var(--bg);
+		zoom: var(--scale);
 	}
 
 	:global(body.dark-mode) {
