@@ -1,6 +1,29 @@
 import { writable } from 'svelte/store';
 
-import { gotEm } from './utils';
+/**
+ * Get an item from localStorage or sessionStorage, and if it doesn't exist, set it to the default
+ * @param {string} key The storage key for the item
+ * @param {*} value The default value to be set if the store does not exist yet
+ * @param {(localStorage | sessionStorage)} [type] Local or session storage
+ * @returns The item from storage, or the default if there was nothing set
+ */
+function gotEm(key, value, type = localStorage) {
+  const getthething = type.getItem(key);
+
+  if (getthething == null) { // Nothing set yet
+    type.setItem(key, JSON.stringify(value));
+    return value;
+  }
+
+  // For in case it got set to something not in JSON format
+  try {
+    return JSON.parse(getthething);
+  }
+  catch {
+    type.setItem(key, JSON.stringify(value));
+    return value;
+  }
+}
 
 const defaultData = {
   totalLift: 18000,
@@ -21,11 +44,15 @@ export const defensesCanLose = writable(8);
 
 export const edit = writable(false);
 
+const savedSingleOffenseDisplay = gotEm('singleOffenseDisplay', true);
+export const singleOffenseDisplay = writable(savedSingleOffenseDisplay);
+
 const savedGoalColor = gotEm('goalColor', false);
 export const goalColor = writable(savedGoalColor);
 
 const savedMode = gotEm('darkMode', false);
 export const darkMode = writable(savedMode);
+
 
 export const defaultShow = {
   season: true,
