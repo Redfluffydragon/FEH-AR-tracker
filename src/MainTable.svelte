@@ -7,7 +7,6 @@
 	import {
     dataKeys,
 		edit,
-    defaultShow,
 		showColumns,
 		columnData,
 		thisWeekData as data,
@@ -105,11 +104,11 @@
     seasonImgSrc: season ? 'img/light-and-dark.png' : 'img/astra-and-anima.png',
     seasonEndDate: parseDate(getEndDate()).slice(0, -5),
     liftToGoal: Math.max($data.liftGoal - $data.totalLift, 0),
-    offensesToGoal: 
-      Math.max(Math.ceil(($data.liftGoal - $data.totalLift) / $data.liftGainPerOffense[season]), 0)
-      / SOFNum,
+    offensesToGoal:
+      Math.max(Math.ceil(($data.liftGoal - $data.totalLift) / $data.liftGainPerOffense[season]), 0) / SOFNum,
     defenseMargin:
-      Math.floor(($data.liftGainPerOffense[season] * $data.offensesLeftInSeason + $data.totalLift - $data.liftGoal) / $data.liftLossPerDefense),
+      Math.floor(($data.liftGainPerOffense[season] * $data.offensesLeftInSeason + $data.totalLift - $data.liftGoal)
+      / $data.liftLossPerDefense),
     maxLift: $data.totalLift + $data.liftGainPerOffense[season] * $data.offensesLeftInSeason,
     minLift: 
       ($data.totalLift + $data.liftGainPerOffense[season] * $data.offensesLeftInSeason) 
@@ -120,7 +119,8 @@
   }
 
 	function updateTimes() {
-		requestAnimationFrame(updateTimes);
+    // Don't update when editing, it makes it freeze
+		!$edit && requestAnimationFrame(updateTimes);
 
 		calcValues.LLCTimeLeft = parseTime(getLLCTimeLeft($data.lastDefenseDate));
 		calcValues.timeToFewerDefenses = getTimeToFewerDef($data.lastDefenseDate);
@@ -135,8 +135,6 @@
 
 	onMount(() => {
 		updateTimes();
-    // for some reason Svelte doesn't make the lift goal select show the bound value on first load of the page
-    document.getElementById('liftGoalInput').value = $data.liftGoal;
 	});
 
   // For drag and drop
@@ -169,6 +167,7 @@
 	function saveEdit() {
 		$edit = false;
 		dragDisabled = true;
+    setTimeout(updateTimes, 500); // Otherwise the table doesn't redraw correctly
 	}
 
 	function cancelEdit() {
@@ -179,6 +178,7 @@
 
 		$edit = false;
 		dragDisabled = true;
+    setTimeout(updateTimes, 500); // Otherwise the table doesn't redraw correctly
 	}
 </script>
 
@@ -273,7 +273,8 @@
     <br>
     <button on:click="{saveEdit}" class="saveBtn">Save</button>
     <button on:click="{cancelEdit}">Cancel</button>
-    <button on:click="{() => {$showColumns = defaultShow}}">Show all</button>
+    <button on:click="{() => {for (let i of dataKeys) { $showColumns[i] = true; }}}">Show all</button>
+    <button on:click="{() => { $columnData = $columnData.sort((i1, i2) => i1.id - i2.id) }}">Reset order</button>
   {:else}
     <button class="edit-btn" on:click="{startEdit}">Edit</button>
   {/if}
