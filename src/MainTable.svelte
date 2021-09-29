@@ -10,7 +10,7 @@
     defaultShow,
 		showColumns,
 		columnData,
-		thisWeekData,
+		thisWeekData as data,
     singleOffenseDisplay
   } from './stores';
 
@@ -45,13 +45,13 @@
 		return Math.max((lastDefenseDate.valueOf() + 7.2e+7 - now), 0);
 	}
 
-	function getTimeToFewerDefenses(lastDefenseDate) {
+	function getTimeToFewerDef(lastDefenseDate) {
 		lastDefenseDate = new Date(lastDefenseDate);
 
-		if (getDefensesCanLose(lastDefenseDate) <= 0) {
+		if (getDefCanLose(lastDefenseDate) <= 0) {
 			return 'N/A';
 		}
-		return parseTime(getDefensesCanLose(lastDefenseDate, false) + getLLCTimeLeft(lastDefenseDate));
+		return parseTime(getDefCanLose(lastDefenseDate, false) + getLLCTimeLeft(lastDefenseDate));
 	}
 
   /**
@@ -69,16 +69,19 @@
   /**
    * Get the current AR season from the input date
    * @param {Date} date
-   * @returns true for Light/Dark season, false for Astra/Anima season
+   * @returns 1 for Light/Dark season, 0 for Astra/Anima season
    */
   function getSeason(date) {
     // Mon Sep 20 2021 23:00:00 GMT+0000 - end of recent light season as of the time of this writing
     const knownLightSeason = new Date(1632178800000);
 
     // Subtract known season, then divide by ms in a week and truncate to get how many weeks it's been since then.
-    // % 2 because it alternates.
-    return !!(Math.trunc((date - knownLightSeason) / 6.048e8) % 2);
+    // % 2 because it alternates
+    return (Math.trunc((date - knownLightSeason) / 6.048e8) % 2);
   }
+
+  let season = getSeason(new Date());
+  $: SOFNum = $singleOffenseDisplay ? 1 : 2;
 
   /**
    * Get the number of defenses it is possible to lose based on the current time and the time of the last defense that counted
@@ -86,7 +89,7 @@
    * @param {Boolean} round Whether or not to round the number returned
    * @returns Number
    */
-  function getDefensesCanLose(lastDefenseDate, forDisplay = true) {
+  function getDefCanLose(lastDefenseDate, forDisplay = true) {
     lastDefenseDate = new Date(lastDefenseDate);
 
     const now = new Date();
@@ -98,39 +101,45 @@
   }
 
   $: calcValues = {
-    season: 'Light/Dark',
-    seasonImgSrc: 'img/light-and-dark.png',
+    season: season ? 'Light/Dark' : 'Astra/Anima',
+    seasonImgSrc: season ? 'img/light-and-dark.png' : 'img/astra-and-anima.png',
     seasonEndDate: parseDate(getEndDate()).slice(0, -5),
-    liftToGoal: Math.max($thisWeekData.liftGoal - $thisWeekData.totalLift, 0),
+    liftToGoal: Math.max($data.liftGoal - $data.totalLift, 0),
     offensesToGoal: 
-      Math.max(Math.ceil(($thisWeekData.liftGoal - $thisWeekData.totalLift) / $thisWeekData.liftGainPerOffense), 0)
+      Math.max(Math.ceil(($data.liftGoal - $data.totalLift) / $data.liftGainPerOffense[season]), 0)
       / SOFNum,
-    defenseMargin: Math.floor(($thisWeekData.liftGainPerOffense * $thisWeekData.offensesLeftInSeason + $thisWeekData.totalLift - $thisWeekData.liftGoal) / $thisWeekData.liftLossPerDefense),
-    maxLift: $thisWeekData.totalLift + $thisWeekData.liftGainPerOffense * $thisWeekData.offensesLeftInSeason,
-    minLift: ($thisWeekData.totalLift + $thisWeekData.liftGainPerOffense * $thisWeekData.offensesLeftInSeason) - $thisWeekData.liftLossPerDefense * getDefensesCanLose($thisWeekData.lastDefenseDate),
-    LLCTimeLeft: parseTime(getLLCTimeLeft($thisWeekData.lastDefenseDate)),
-		timeToFewerDefenses: getTimeToFewerDefenses($thisWeekData.lastDefenseDate),
-		defensesCanLose: getDefensesCanLose($thisWeekData.lastDefenseDate),
+    defenseMargin:
+      Math.floor(($data.liftGainPerOffense[season] * $data.offensesLeftInSeason + $data.totalLift - $data.liftGoal) / $data.liftLossPerDefense),
+    maxLift: $data.totalLift + $data.liftGainPerOffense[season] * $data.offensesLeftInSeason,
+    minLift: 
+      ($data.totalLift + $data.liftGainPerOffense[season] * $data.offensesLeftInSeason) 
+      - $data.liftLossPerDefense * getDefCanLose($data.lastDefenseDate),
+    LLCTimeLeft: parseTime(getLLCTimeLeft($data.lastDefenseDate)),
+		timeToFewerDefenses: getTimeToFewerDef($data.lastDefenseDate),
+		defensesCanLose: getDefCanLose($data.lastDefenseDate),
   }
 
 	function updateTimes() {
 		requestAnimationFrame(updateTimes);
 
-		calcValues.LLCTimeLeft = parseTime(getLLCTimeLeft($thisWeekData.lastDefenseDate));
-		calcValues.timeToFewerDefenses = getTimeToFewerDefenses($thisWeekData.lastDefenseDate);
-		calcValues.defensesCanLose = getDefensesCanLose($thisWeekData.lastDefenseDate);
-    calcValues.season = getSeason(new Date()) ? 'Light/Dark' : 'Astra/Anima';
-    calcValues.seasonImgSrc = getSeason(new Date()) ? 'img/light-and-dark.png' : 'img/astra-and-anima.png';
+		calcValues.LLCTimeLeft = parseTime(getLLCTimeLeft($data.lastDefenseDate));
+		calcValues.timeToFewerDefenses = getTimeToFewerDef($data.lastDefenseDate);
+		calcValues.defensesCanLose = getDefCanLose($data.lastDefenseDate);
+    calcValues.seasonEndDate = parseDate(getEndDate()).slice(0, -5);
+
+    season = getSeason(new Date());
+    calcValues.season = season ? 'Light/Dark' : 'Astra/Anima';
+    calcValues.seasonImgSrc = season ? 'img/light-and-dark.png' : 'img/astra-and-anima.png';
 	}
 
-  $: SOFNum = $singleOffenseDisplay ? 1 : 2;
 
 	onMount(() => {
 		updateTimes();
-    // for some reason Svelte doesn't make it show the bound value on first load of the page
-    document.getElementById('liftGoalInput').value = $thisWeekData.liftGoal;
+    // for some reason Svelte doesn't make the lift goal select show the bound value on first load of the page
+    document.getElementById('liftGoalInput').value = $data.liftGoal;
 	});
 
+  // For drag and drop
 	$: items = $columnData;
 	// const flipDurationMs = (d) => Math.sqrt(d) * 40; // DNDZones can't handle function for flipDuration?
 	const flipDurationMs = 300;
@@ -143,7 +152,6 @@
 
   let tempShowColumns = {};
 	let tempColumnData = [];
-
 
 	function startEdit() {
 		for (let i of dataKeys) {
@@ -178,28 +186,27 @@
      on:consider="{handleDnd}" 
      on:finalize="{handleDnd}" 
      class="mainGrid">
-  {#each items as data(data.id)}
-      <div class="column" id="{data.value}" animate:flip="{{duration: flipDurationMs}}" class:hide="{!($edit || $showColumns[data.value])}" >
-        <div class="header centerFlex" title="{data.title}">
-          {#if data.value === 'timeToFewerDefenses'}
+  {#each items as item(item.id)}
+      <div class="column" id="{item.value}" animate:flip="{{duration: flipDurationMs}}" class:hide="{!($edit || $showColumns[item.value])}" >
+        <div class="header centerFlex" title="{item.title}">
+          {#if item.value === 'timeToFewerDefenses'}
             Time to {Math.max(calcValues.defensesCanLose - 1, 0)} defense{calcValues.defensesCanLose == 2 ? '' : 's'}
           {:else}
-            {data.name}
+            {item.name}
           {/if}
         </div>
         {#if !$edit}
-          <div id="{data.value + 'Cell'}" in:fly="{{y: -30}}" class="dataCell centerFlex">
-            {#if data.userInput}
-              {#if data.value === 'lastDefenseDate'}
-                <input type="datetime-local" class="dateInput" bind:value="{$thisWeekData[data.value]}">
+          <div id="{item.value + 'Cell'}" in:fly="{{y: -30}}" class="dataCell centerFlex">
+            {#if item.userInput}
+              {#if item.value === 'lastDefenseDate'}
+                <input type="datetime-local" class="dateInput" bind:value="{$data[item.value]}">
               {:else if
-                data.value === 'totalLift' ||
-                data.value === 'liftGainPerOffense' ||
-                data.value === 'liftLossPerDefense' ||
-                data.value === 'offensesLeftInSeason'}
-                <input type="number" pattern="[0-9]*" class="thisSeasonInput" bind:value="{$thisWeekData[data.value]}">
-              {:else if data.value === 'liftGoal'}
-                <select name="liftGoal" id="liftGoalInput" bind:value="{$thisWeekData.liftGoal}">
+                item.value === 'totalLift' ||
+                item.value === 'liftLossPerDefense' ||
+                item.value === 'offensesLeftInSeason'}
+                <input type="number" pattern="[0-9]*" class="thisSeasonInput" bind:value="{$data[item.value]}">
+              {:else if item.value === 'liftGoal'}
+                <select name="liftGoal" id="liftGoalInput" bind:value="{$data.liftGoal}">
                   <option value=20100>Tier 39</option>
                   <option value=20800>Tier 38</option>
                   <option value=20400>Tier 37</option>
@@ -240,18 +247,20 @@
                   <option value=400>Tier 2</option>
                   <option value=0>Tier 1</option>
                 </select>
+              {:else if item.value === 'liftGainPerOffense'}
+                <input type="number" pattern="[0-9]*" class="thisSeasonInput" bind:value="{$data[item.value][season]}">
               {/if}
             {:else}
-              {#if data.value === 'season'}
-                <img src={calcValues.seasonImgSrc} alt="{calcValues.season} season icons" class="seasonIcon" title="{calcValues[data.value]}">
+              {#if item.value === 'season'}
+                <img src={calcValues.seasonImgSrc} alt="{calcValues.season} season icons" class="seasonIcon" title="{calcValues[item.value]}">
               {:else}
-                {calcValues[data.value]}
+                {calcValues[item.value]}
               {/if}
             {/if}
           </div>
         {:else}
           <div in:fly="{{y: -30}}" class="centerFlex">
-            <input type="checkbox" name="{data.name}" class="editCheckbox" bind:checked="{$showColumns[data.value]}">
+            <input type="checkbox" name="{item.name}" class="editCheckbox" bind:checked="{$showColumns[item.value]}">
           </div>
         {/if}  
       </div>
