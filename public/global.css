@@ -12,6 +12,16 @@ body {
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 }
 
+.background {
+	background: var(--bg-img-src) no-repeat 50% 50%;
+	min-height: 100vh;
+	background-size: cover;
+	position: fixed;
+	z-index: -1;
+	height: 100vh;
+	width: 100vw;
+}
+
 a {
 	color: rgb(0,100,200);
 	text-decoration: none;
