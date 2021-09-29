@@ -1,27 +1,43 @@
 <script>
-  export let dragDisabled;
-
 	import { onMount } from 'svelte';
 	import { flip } from "svelte/animate";
   import { fly} from "svelte/transition";
 	import { dndzone } from 'svelte-dnd-action';
 
 	import {
+    dataKeys,
 		edit,
+    defaultShow,
 		showColumns,
 		columnData,
 		thisWeekData,
 		LLCTimeLeft,
 		timeToFewerDefenses,
-		defensesCanLose
+		defensesCanLose,
+    singleOffenseDisplay
   } from './stores';
 
-  import {
-		parseTime,
-		parseDate,
-		getDefensesCanLose,
-		getEndDate,
-	} from "./utils";
+  /**
+   * Take a duration in milliseconds and convert it to hh:mm:ss format
+   * @param {A duration in milliseconds} milliseconds 
+   * @returns A time string
+   */
+  function parseTime(milliseconds) {
+    const hours = Math.floor(milliseconds / 3600000);
+    const minutes = ('0' + Math.floor((milliseconds % 3600000) / 60000)).slice(-2);
+    const seconds = ('0' + Math.floor((milliseconds % 60000) / 1000)).slice(-2);
+    return `${hours}:${minutes}:${seconds}`;
+  }
+
+  /**
+   * Convert a time in milliseconds to a human-readable string
+   * @param {Number} milliseconds 
+   * @returns A date string
+   */
+  function parseDate(milliseconds) {
+    const msToDate = new Date(milliseconds);
+    return `${msToDate.getMonth() + 1}/${msToDate.getDate()}/${msToDate.getFullYear()} ${msToDate.toTimeString().slice(0, 5)}`;
+  }
 
   function getLLCTimeLeft(lastDefenseDate) {
 		if (!lastDefenseDate) {
@@ -41,6 +57,48 @@
 		return parseTime(getDefensesCanLose(lastDefenseDate, false) + getLLCTimeLeft(lastDefenseDate));
 	}
 
+  /**
+   * Get the end date of the current season
+   * @returns A date object
+   */
+  function getEndDate() {
+    const now = new Date();
+    const seasonEndDate = new Date();
+    seasonEndDate.setDate(now.getDate() + (7 + 1 - now.getDay()) % 7);
+    seasonEndDate.setHours(17, 0, 0); // have to correct for daylight saving time
+    return seasonEndDate;
+  }
+
+  function getSeason(date) {
+    // Mon Sep 20 2021 23:00:00 GMT+0000 - end of recent light season as of the time of this writing
+    const knownLightSeason = new Date(1632178800000);
+
+    // Subtract known season, then divide by ms in a week and truncate to get how many weeks it's been since then.
+    // % 2 because it alternates.
+    const currentSeason = Math.trunc((date - knownLightSeason) / 6.048e8) % 2;
+
+    return currentSeason ? 'Light/Dark' : 'Astra/Anima';
+  }
+
+  console.log(getSeason(getEndDate()));
+
+  /**
+   * Get the number of defenses it is possible to lose based on the current time and the time of the last defense that counted
+   * @param {Date} lastDefenseDate 
+   * @param {Boolean} round Whether or not to round the number returned
+   * @returns Number
+   */
+  function getDefensesCanLose(lastDefenseDate, forDisplay = true) {
+    lastDefenseDate = new Date(lastDefenseDate);
+
+    const now = new Date();
+    const LLCTimeLeft = Math.max((lastDefenseDate ? lastDefenseDate.valueOf() + 7.2e+7 - now : 0), 0);
+    const defensesCanLose = (getEndDate().valueOf() - now - LLCTimeLeft);
+
+    // Subtract one when not-for-display just so it matches LLC time left - don't know why it's like this (modulus probably)
+    return forDisplay ? Math.ceil(defensesCanLose / 7.2e7) : defensesCanLose % 7.2e7 - 1;
+  }
+
 	function updateTimes() {
 		requestAnimationFrame(updateTimes);
 
@@ -49,6 +107,8 @@
 		$defensesCanLose = getDefensesCanLose($thisWeekData.lastDefenseDate);
 	}
 
+  $: SOFNum = $singleOffenseDisplay ? 1 : 2;
+
 	onMount(() => {
 		updateTimes();
     // for some reason Svelte doesn't make it show the bound value on first load of the page
@@ -56,10 +116,12 @@
 	});
 
   $: calculatedValues = {
-    season: 'Astra/Anima',
+    season: 'LIght/Dark',
     seasonEndDate: parseDate(getEndDate()).slice(0, -5),
     liftToGoal: Math.max($thisWeekData.liftGoal - $thisWeekData.totalLift, 0),
-    offensesToGoal: Math.max(Math.ceil(($thisWeekData.liftGoal - $thisWeekData.totalLift) / $thisWeekData.liftGainPerOffense), 0),
+    offensesToGoal: 
+      Math.max(Math.ceil(($thisWeekData.liftGoal - $thisWeekData.totalLift) / $thisWeekData.liftGainPerOffense), 0)
+      / SOFNum,
     defenseMargin: Math.floor(($thisWeekData.liftGainPerOffense * $thisWeekData.offensesLeftInSeason + $thisWeekData.totalLift - $thisWeekData.liftGoal) / $thisWeekData.liftLossPerDefense),
     maxLift: $thisWeekData.totalLift + $thisWeekData.liftGainPerOffense * $thisWeekData.offensesLeftInSeason,
     minLift: ($thisWeekData.totalLift + $thisWeekData.liftGainPerOffense * $thisWeekData.offensesLeftInSeason) - $thisWeekData.liftLossPerDefense * getDefensesCanLose($thisWeekData.lastDefenseDate),
@@ -68,18 +130,55 @@
 	$: items = $columnData;
 	// const flipDurationMs = (d) => Math.sqrt(d) * 40; // DNDZones can't handle function for flipDuration?
 	const flipDurationMs = 300;
+	let dragDisabled = true;
+  const dropTargetStyle = {outline: 'black solid 3px'};
 
 	function handleDnd(e) {
 		$columnData = e.detail.items;
 	}
+
+  let tempShowColumns = {};
+	let tempColumnData = [];
+
+
+	function startEdit() {
+		for (let i of dataKeys) {
+			tempShowColumns[i] = $showColumns[i];
+		}
+		$columnData.forEach((item, idx) => tempColumnData[idx] = item);
+		
+		$edit = true;
+		// Otherwise the drag and drop activates before the hidden columns are shown and it messes everything up
+		setTimeout(() => {
+			dragDisabled = false;
+		}, 20);
+	}
+
+	function saveEdit() {
+		$edit = false;
+		dragDisabled = true;
+	}
+
+	function cancelEdit() {
+		for (let i of dataKeys) {
+			$showColumns[i] = tempShowColumns[i];
+		}
+		tempColumnData.forEach((item, idx) => $columnData[idx] = item);
+
+		$edit = false;
+		dragDisabled = true;
+	}
 </script>
 
-<div use:dndzone="{{items, flipDurationMs, dragDisabled}}" on:consider="{handleDnd}" on:finalize="{handleDnd}" class="mainGrid">
+<div use:dndzone="{{items, flipDurationMs, dragDisabled, dropTargetStyle}}" 
+     on:consider="{handleDnd}" 
+     on:finalize="{handleDnd}" 
+     class="mainGrid">
   {#each items as data(data.id)}
       <div class="column" id="{data.value}" animate:flip="{{duration: flipDurationMs}}" class:hide="{!($edit || $showColumns[data.value])}" >
         <div class="header centerFlex" title="{data.title}">
           {#if data.value === 'timeToFewerDefenses'}
-            Time to {$defensesCanLose - 1} defense{$defensesCanLose == 2 ? '' : 's'}
+            Time to {Math.max($defensesCanLose - 1, 0)} defense{$defensesCanLose == 2 ? '' : 's'}
           {:else}
             {data.name}
           {/if}
@@ -146,7 +245,7 @@
               {$defensesCanLose}
             {:else}
               {#if data.value === 'season'}
-                <img src="img/astra-and-anima.png" alt="Astra and anima season icons" class="seasonIcon" title="{calculatedValues[data.value]}">
+                <img src="img/light-and-dark.png" alt="Light and Dark season icons" class="seasonIcon" title="{calculatedValues[data.value]}">
               {:else}
                 {calculatedValues[data.value]}
               {/if}
@@ -159,6 +258,18 @@
         {/if}  
       </div>
   {/each}
+</div>
+
+<div class="z-0">
+  {#if $edit}
+    <span class="editTip">Drag and drop to rearrange</span>
+    <br>
+    <button on:click="{saveEdit}" class="saveBtn">Save</button>
+    <button on:click="{cancelEdit}">Cancel</button>
+    <button on:click="{() => {$showColumns = defaultShow}}">Show all</button>
+  {:else}
+    <button class="edit-btn" on:click="{startEdit}">Edit</button>
+  {/if}
 </div>
 
 <style>
@@ -230,6 +341,19 @@
     width: 1.5rem;
     padding: 2px;
   }
+
+  .editTip {
+		display: inline-block;
+		padding: 5px 7px;
+		margin-bottom: 1rem;
+		width: auto;
+		background: var(--transparent-bg);
+		border-radius: 3px;
+	}
+
+  .z-0 {
+		z-index: 0;
+	}
   
   .hide {
     display: none;
