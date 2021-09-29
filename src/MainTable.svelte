@@ -11,9 +11,6 @@
 		showColumns,
 		columnData,
 		thisWeekData,
-		LLCTimeLeft,
-		timeToFewerDefenses,
-		defensesCanLose,
     singleOffenseDisplay
   } from './stores';
 
@@ -69,18 +66,19 @@
     return seasonEndDate;
   }
 
+  /**
+   * Get the current AR season from the input date
+   * @param {Date} date
+   * @returns true for Light/Dark season, false for Astra/Anima season
+   */
   function getSeason(date) {
     // Mon Sep 20 2021 23:00:00 GMT+0000 - end of recent light season as of the time of this writing
     const knownLightSeason = new Date(1632178800000);
 
     // Subtract known season, then divide by ms in a week and truncate to get how many weeks it's been since then.
     // % 2 because it alternates.
-    const currentSeason = Math.trunc((date - knownLightSeason) / 6.048e8) % 2;
-
-    return currentSeason ? 'Light/Dark' : 'Astra/Anima';
+    return !!(Math.trunc((date - knownLightSeason) / 6.048e8) % 2);
   }
-
-  console.log(getSeason(getEndDate()));
 
   /**
    * Get the number of defenses it is possible to lose based on the current time and the time of the last defense that counted
@@ -99,12 +97,30 @@
     return forDisplay ? Math.ceil(defensesCanLose / 7.2e7) : defensesCanLose % 7.2e7 - 1;
   }
 
+  $: calcValues = {
+    season: 'Light/Dark',
+    seasonImgSrc: 'img/light-and-dark.png',
+    seasonEndDate: parseDate(getEndDate()).slice(0, -5),
+    liftToGoal: Math.max($thisWeekData.liftGoal - $thisWeekData.totalLift, 0),
+    offensesToGoal: 
+      Math.max(Math.ceil(($thisWeekData.liftGoal - $thisWeekData.totalLift) / $thisWeekData.liftGainPerOffense), 0)
+      / SOFNum,
+    defenseMargin: Math.floor(($thisWeekData.liftGainPerOffense * $thisWeekData.offensesLeftInSeason + $thisWeekData.totalLift - $thisWeekData.liftGoal) / $thisWeekData.liftLossPerDefense),
+    maxLift: $thisWeekData.totalLift + $thisWeekData.liftGainPerOffense * $thisWeekData.offensesLeftInSeason,
+    minLift: ($thisWeekData.totalLift + $thisWeekData.liftGainPerOffense * $thisWeekData.offensesLeftInSeason) - $thisWeekData.liftLossPerDefense * getDefensesCanLose($thisWeekData.lastDefenseDate),
+    LLCTimeLeft: parseTime(getLLCTimeLeft($thisWeekData.lastDefenseDate)),
+		timeToFewerDefenses: getTimeToFewerDefenses($thisWeekData.lastDefenseDate),
+		defensesCanLose: getDefensesCanLose($thisWeekData.lastDefenseDate),
+  }
+
 	function updateTimes() {
 		requestAnimationFrame(updateTimes);
 
-		$LLCTimeLeft = parseTime(getLLCTimeLeft($thisWeekData.lastDefenseDate));
-		$timeToFewerDefenses = getTimeToFewerDefenses($thisWeekData.lastDefenseDate);
-		$defensesCanLose = getDefensesCanLose($thisWeekData.lastDefenseDate);
+		calcValues.LLCTimeLeft = parseTime(getLLCTimeLeft($thisWeekData.lastDefenseDate));
+		calcValues.timeToFewerDefenses = getTimeToFewerDefenses($thisWeekData.lastDefenseDate);
+		calcValues.defensesCanLose = getDefensesCanLose($thisWeekData.lastDefenseDate);
+    calcValues.season = getSeason(new Date()) ? 'Light/Dark' : 'Astra/Anima';
+    calcValues.seasonImgSrc = getSeason(new Date()) ? 'img/light-and-dark.png' : 'img/astra-and-anima.png';
 	}
 
   $: SOFNum = $singleOffenseDisplay ? 1 : 2;
@@ -114,18 +130,6 @@
     // for some reason Svelte doesn't make it show the bound value on first load of the page
     document.getElementById('liftGoalInput').value = $thisWeekData.liftGoal;
 	});
-
-  $: calculatedValues = {
-    season: 'LIght/Dark',
-    seasonEndDate: parseDate(getEndDate()).slice(0, -5),
-    liftToGoal: Math.max($thisWeekData.liftGoal - $thisWeekData.totalLift, 0),
-    offensesToGoal: 
-      Math.max(Math.ceil(($thisWeekData.liftGoal - $thisWeekData.totalLift) / $thisWeekData.liftGainPerOffense), 0)
-      / SOFNum,
-    defenseMargin: Math.floor(($thisWeekData.liftGainPerOffense * $thisWeekData.offensesLeftInSeason + $thisWeekData.totalLift - $thisWeekData.liftGoal) / $thisWeekData.liftLossPerDefense),
-    maxLift: $thisWeekData.totalLift + $thisWeekData.liftGainPerOffense * $thisWeekData.offensesLeftInSeason,
-    minLift: ($thisWeekData.totalLift + $thisWeekData.liftGainPerOffense * $thisWeekData.offensesLeftInSeason) - $thisWeekData.liftLossPerDefense * getDefensesCanLose($thisWeekData.lastDefenseDate),
-  }
 
 	$: items = $columnData;
 	// const flipDurationMs = (d) => Math.sqrt(d) * 40; // DNDZones can't handle function for flipDuration?
@@ -178,7 +182,7 @@
       <div class="column" id="{data.value}" animate:flip="{{duration: flipDurationMs}}" class:hide="{!($edit || $showColumns[data.value])}" >
         <div class="header centerFlex" title="{data.title}">
           {#if data.value === 'timeToFewerDefenses'}
-            Time to {Math.max($defensesCanLose - 1, 0)} defense{$defensesCanLose == 2 ? '' : 's'}
+            Time to {Math.max(calcValues.defensesCanLose - 1, 0)} defense{calcValues.defensesCanLose == 2 ? '' : 's'}
           {:else}
             {data.name}
           {/if}
@@ -237,17 +241,11 @@
                   <option value=0>Tier 1</option>
                 </select>
               {/if}
-            {:else if data.value === 'timeToFewerDefenses'}
-              {$timeToFewerDefenses}
-            {:else if data.value === 'LLCTimeLeft'}
-              {$LLCTimeLeft}
-            {:else if data.value === 'defensesCanLose'}
-              {$defensesCanLose}
             {:else}
               {#if data.value === 'season'}
-                <img src="img/light-and-dark.png" alt="Light and Dark season icons" class="seasonIcon" title="{calculatedValues[data.value]}">
+                <img src={calcValues.seasonImgSrc} alt="{calcValues.season} season icons" class="seasonIcon" title="{calcValues[data.value]}">
               {:else}
-                {calculatedValues[data.value]}
+                {calcValues[data.value]}
               {/if}
             {/if}
           </div>
