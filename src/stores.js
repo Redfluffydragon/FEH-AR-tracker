@@ -51,6 +51,15 @@ export const fontSize = writable(savedFontSize);
 const savedShowTooltips = gotEm('showTooltips', true);
 export const showTooltips = writable(savedShowTooltips);
 
+const savedExportOptions = gotEm('exportOptions', {
+  type: 'clipboard',
+  onlyShown: false,
+  exportHeaders: false,
+  noFormatting: true,
+})
+export const exportOptions = writable(savedExportOptions);
+
+
 export const dragged = writable(false);
 
 
@@ -74,7 +83,6 @@ const defaultShow = {
 };
 export const dataKeys = Object.keys(defaultShow);
 const savedShowColumns = gotEm('showColumns', defaultShow);
-
 export const showColumns = writable(savedShowColumns);
 
 const defaultColumns = [
@@ -100,7 +108,7 @@ const defaultColumns = [
   {
     id: 3,
     name: 'Lift Gain per Offense',
-    title: 'Lift gain per single offense',
+    title: 'Lift gain per single offense - saves separately for both seasons',
     value: 'liftGainPerOffense',
     userInput: true,
   },
@@ -156,7 +164,7 @@ const defaultColumns = [
   },
   {
     id: 12,
-    name: 'Time to _ defenses',
+    name: 'Time to fewer defenses',
     title: 'Time until it\'s possible to lose one less defense than you can now',
     value: 'timeToFewerDefenses',
   },

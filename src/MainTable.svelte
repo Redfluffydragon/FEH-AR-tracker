@@ -4,6 +4,7 @@
   import { fly} from "svelte/transition";
 	import { dndzone } from 'svelte-dnd-action';
   import Tooltip from './Tooltip.svelte';
+	import Modal from './Modal.svelte';
 
 	import {
     dataKeys,
@@ -13,6 +14,7 @@
 		showColumns,
 		columnData,
 		thisWeekData as data,
+    exportOptions
   } from './stores';
 
   /**
@@ -193,7 +195,7 @@
 
   // Goal higlighting
   $: goodColor = $darkMode ? 'rgb(0, 80, 0)' : 'rgb(117, 255, 117)';
-  $: badColor = $darkMode ? 'rgb(80, 0, 0)' : 'rgb(255, 117, 116)';
+  $: badColor = $darkMode ? 'rgb(80, 0, 0)' : 'rgb(255, 100, 100)';
 
   $: document.body.style.setProperty('--goal-lift-bg',
     calcValues.liftToGoal <= 0 && $goalColor ? goodColor : 'var(--bg)');
@@ -206,6 +208,103 @@
   $: document.body.style.setProperty('--goal-max-lift-bg',
     calcValues.maxLift < $data.liftGoal && $goalColor ? badColor : 'var(--bg)');
 
+  // For export
+  function exportCSV() {
+    let csv = 'data:text/csv;charset=utf-8,';
+    if ($exportOptions.exportHeaders) {
+      for (let i of $columnData) {
+        if (!$exportOptions.onlyShown || ($exportOptions.onlyShown && $showColumns[i.value])) {
+          csv += i.name + ',';
+        }
+      }
+      csv += '\n';
+    }
+    for (let i of $columnData) {
+      if (!$exportOptions.onlyShown || ($exportOptions.onlyShown && $showColumns[i.value])) {
+        if (i.value === 'lastDefenseDate' ||
+          i.value === 'totalLift' ||
+          i.value === 'liftLossPerDefense' ||
+          i.value === 'offensesLeftInSeason' ||
+          i.value === 'liftGoal') {
+          csv += $data[i.value] + ',';
+        }
+        else if (i.value === 'liftGainPerOffense') {
+          csv += $data[i.value][season] + ',';
+        }
+        else {
+          csv += calcValues[i.value] + ',';
+        }
+      }
+    }
+    const encodedURI = encodeURI(csv);
+    const csvLink = document.createElement("a");
+    csvLink.setAttribute("href", encodedURI);
+    csvLink.setAttribute('download', `AR_season_${calcValues.seasonEndDate}.csv`);
+    document.body.appendChild(csvLink);
+    csvLink.click();
+    csvLink.remove();
+
+    window.open(encodedURI);
+    console.log(encodedURI);
+  }
+
+  function copyToClipboard() {
+    const table = document.createElement('table');
+    if ($exportOptions.exportHeaders) {
+      const headerRow = document.createElement('thead');
+      for (let i of $columnData) {
+        if (!$exportOptions.onlyShown || ($exportOptions.onlyShown && $showColumns[i.value])) {
+          const headerCell = document.createElement('th');
+          headerCell.textContent = i.name;
+          headerRow.appendChild(headerCell);
+        }
+      }
+      table.appendChild(headerRow);
+    }
+    const dataRow = document.createElement('tr');
+    for (let i of $columnData) {
+      if (!$exportOptions.onlyShown || ($exportOptions.onlyShown && $showColumns[i.value])) {
+        const newCell = document.createElement('td');
+
+        if (i.value === 'lastDefenseDate' ||
+          i.value === 'totalLift' ||
+          i.value === 'liftLossPerDefense' ||
+          i.value === 'offensesLeftInSeason' ||
+          i.value === 'liftGoal') {
+          newCell.textContent = $data[i.value];
+        }
+        else if (i.value === 'liftGainPerOffense') {
+          newCell.textContent = $data[i.value][season];
+        }
+        else {
+          newCell.textContent = calcValues[i.value];
+        }
+        dataRow.appendChild(newCell);
+      }
+    }
+    table.appendChild(dataRow);
+
+    $exportOptions.noFormatting && (table.style.all = 'unset');
+
+    document.body.appendChild(table);
+
+    let range;
+    let selection;
+    if (document.createRange && window.getSelection) {
+      range = document.createRange();
+      selection = window.getSelection();
+      selection.removeAllRanges();
+      range.selectNodeContents(table);
+      selection.addRange(range);
+    }
+
+    try {
+      document.execCommand('Copy');
+    } catch (e) {
+      alert(`Error: ${e}. Could not copy to clipboard.`)
+    }
+    table.remove();
+  }
 </script>
 
 <div use:dndzone="{{items, flipDurationMs, dragDisabled, dropTargetStyle}}" 
@@ -222,7 +321,7 @@
           {/if}
         </div>
         {#if !$edit}
-          <div id="{item.value + 'Cell'}" in:fly="{{y: -30}}" class="dataCell centerFlex">
+          <div id="{item.value + 'Cell'}" in:fly="{{y: -30}}" class="dataCell centerFlex {item.value + 'Cell'}">
             {#if item.userInput}
               {#if item.value === 'lastDefenseDate'}
                 <input type="datetime-local" class="dateInput" bind:value="{$data[item.value]}">
@@ -233,7 +332,7 @@
                 <input type="number" pattern="[0-9]*" class="thisSeasonInput" bind:value="{$data[item.value]}">
               {:else if item.value === 'liftGoal'}
                 <select name="liftGoal" id="liftGoalInput" bind:value="{$data.liftGoal}">
-                  <option value=20100>Tier 39</option>
+                  <option value=21000>Tier 39</option>
                   <option value=20800>Tier 38</option>
                   <option value=20400>Tier 37</option>
                   <option value=20000>Tier 36</option>
@@ -298,16 +397,50 @@
   {/each}
 </div>
 
-<div class="z-0">
+{#if $edit}
+  <div>
+    <span class="editTip z-0">Drag and drop to rearrange</span>
+  </div>
+{/if}
+
+<div class="z-0 centerFlex editBtns">
   {#if $edit}
-    <span class="editTip">Drag and drop to rearrange</span>
-    <br>
     <button on:click="{saveEdit}" class="saveBtn">Save</button>
     <button on:click="{cancelEdit}">Cancel</button>
     <button on:click="{() => {for (let i of dataKeys) { $showColumns[i] = true; }}}">Show all</button>
     <button on:click="{() => { $columnData = $columnData.sort((i1, i2) => i1.id - i2.id) }}">Reset order</button>
   {:else}
     <button class="edit-btn" on:click="{startEdit}">Edit</button>
+    <Modal props="{{
+      title: 'Export',
+      goBtn: 'Export',
+      goFunc: () => {
+        $exportOptions.type === 'csv' ? exportCSV() : copyToClipboard();
+      }
+      }}"> 
+      <div slot="content">
+        <select name="" id="exportOptions" bind:value="{$exportOptions.type}">
+          <option value="clipboard">Copy to clipboard as a table</option>
+          <option value="csv">Export as CSV</option>
+        </select>
+        <br>
+        <br>
+        <div class="checkboxList">
+          <label for="exportAll">
+            <input type="checkbox" name="" id="exportAll" bind:checked="{$exportOptions.onlyShown}">
+            Export only shown columns
+          </label>
+          <label for="exportHeaders">
+            <input type="checkbox" name="" id="exportHeaders" bind:checked="{$exportOptions.exportHeaders}">
+            Export headers
+          </label>
+          <label for="exportNoFormatting" title="Only makes a difference for copying to the clipboard">
+            <input type="checkbox" name="" id="exportNoFormatting" bind:checked="{$exportOptions.noFormatting}">
+            Remove formatting
+          </label>
+        </div>
+      </div>
+    </Modal>
   {/if}
 </div>
 
@@ -377,23 +510,23 @@
     grid-column: auto / span 2;
   }
 
-  #liftToGoalCell {
+  .liftToGoalCell {
     background: var(--goal-lift-bg);
   }
 
-  #offensesToGoalCell {
+  .offensesToGoalCell {
     background: var(--goal-offenses-bg);
   }
 
-  #minLiftCell {
+  .minLiftCell {
     background: var(--goal-min-lift-bg);
   }
 
-  #defenseMarginCell, #defensesCanLoseCell {
+  .defenseMarginCell, #defensesCanLoseCell {
     background: var(--goal-defense-margin-bg);
   }
 
-  #maxLiftCell {
+  .maxLiftCell {
     background: var(--goal-max-lift-bg);
   }
 
@@ -403,13 +536,23 @@
   }
 
   .editTip {
-		display: inline-block;
+    position: relative;
 		padding: 5px 7px;
 		margin-bottom: 1rem;
 		width: auto;
 		background: var(--transparent-bg);
 		border-radius: 3px;
 	}
+
+  .checkboxList {
+    text-align: left;
+    padding: 0.3rem;
+  }
+
+  .editBtns {
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
 
   .z-0 {
 		z-index: 0;
