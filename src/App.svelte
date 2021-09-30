@@ -10,24 +10,23 @@
 		goalColor,
 		thisWeekData,
 		singleOffenseDisplay,
-		zoom
+		fontSize
   } from './stores';
 
 	/**
-	 * automatically display what season it is
-	   * save different lift gain/loss by season
-	 * input last defense date by number of hours ago
-	 * paste last defense date in?
-	 * settings
-	   * green total lift if greater than lift goal? Red if it's not possible to make it?
-	   * display number of double vs single offense matches
-		 * scale? for readability
+	 * modal to view lift gain per season?
+	 * Last defense date:
+		* input last defense date by number of hours ago
+		* paste last defense date in?
+	 * Settings:
+		* green total lift if greater than lift goal? Red if it's not possible to make it?
+		* display number of double vs single offense matches
 	 * tooltips or something for mobile to see title text?
 	 * don't store title text and stuff in localStorage? or add version control?
 	 * Save past seasons
-	   * set starting lift for next season based on total lift from the previous season
-		 * set liftGoal based on last season's lift?
-	 * fix defense margin when it's no longer possible to reach your goal
+		* set starting lift for next season based on total lift from the previous season
+		* set liftGoal based on last season's lift?
+	 * fix defense margin when it's no longer possible to reach your goal - currently displays too high (not zero)
 	 */
 
 	$: localStorage.setItem('showColumns', JSON.stringify($showColumns));
@@ -35,7 +34,7 @@
 	$: localStorage.setItem('thisWeekData', JSON.stringify($thisWeekData));
 	$: localStorage.setItem('darkMode', JSON.stringify($darkMode));
 	$: localStorage.setItem('singleOffenseDisplay', JSON.stringify($singleOffenseDisplay));
-	$: localStorage.setItem('zoom', JSON.stringify($zoom));
+	$: localStorage.setItem('fontSize', JSON.stringify($fontSize));
 
 	onMount(() => {
 		$darkMode && document.body.classList.add('dark-mode');
@@ -47,7 +46,10 @@
 		src: 'img/settings-icon.png',
 	}
 
-	$: document.body.style.setProperty('--scale', $zoom);
+	// Linear function to limit the header font size to 3.5em so it doesn't go off screen
+	$: document.body.style.setProperty('--header-scale', ($fontSize + 2) / $fontSize + 'em');
+	$: document.body.style.setProperty('--font-size', $fontSize);
+
 </script>
 <div class="background"></div>
 
@@ -68,8 +70,8 @@
 			}
 		}">Dark mode</button>
 		<br>
-		<input type="range" min=1 max=1.5 step=0.05 id="zoomSlider" bind:value="{$zoom}">
-		<label for="zoomSlider">Zoom: {Math.round($zoom * 100)}%</label>
+		<input type="range" min=1 max=1.5 step=0.05 id="fontSizeSlider" bind:value="{$fontSize}">
+		<label for="fontSizeSlider">Font size: {Math.round($fontSize * 100)}%</label>
 		<br>
 		<button on:click="{() => localStorage.clear()}">Clear localStorage</button>
 	</div>
@@ -80,12 +82,15 @@
 
 	<MainTable />
 
+	<br>
+	<br>
+	<br>
 </main>
 
 <style>
 	:global(*) {
 		font-weight: 100;
-    font-size: 1.02rem;
+    font-size: calc(1.02rem * var(--font-size));
     color: var(--color);
 	}
 
@@ -101,10 +106,10 @@
 		--bg-img-src: url('img/BG_Alfheim.png');
 		--invert: 0;
 
-		--scale: 1;
+		--header-scale: 3em;
+		--font-size: 1;
 
 		background: var(--bg);
-		zoom: var(--scale);
 	}
 
 	:global(body.dark-mode) {
@@ -133,6 +138,7 @@
 		outline: none;
 		border: none;
 		padding: 7px 10px;
+		margin-bottom: 0.5rem;
 	}
 
 	:global(button:hover) {
@@ -159,9 +165,14 @@
 	h1 {
 		color: var(--heading-color);
 		text-transform: uppercase;
-		font-size: 3rem;
+		font-size: var(--header-scale);
 		font-weight: 100;
-		text-shadow: 0 0 15px var(--color);
+		text-shadow:
+		0 0 2px var(--bg),
+		0 0 5px var(--bg),
+		0 0 10px var(--bg),
+		0 0 15px var(--bg),
+		0 0 20px var(--bg);
 	}
 
 	.active {

@@ -31,7 +31,7 @@ const defaultData = {
   liftLossPerDefense: 40,
   offensesLeftInSeason: 16,
   lastDefenseDate: null,
-  liftGoal: 20800,
+  liftGoal: '20800',
 };
 const savedData = gotEm('thisWeekData', defaultData);
 export const thisWeekData = writable(savedData);
@@ -48,11 +48,11 @@ export const goalColor = writable(savedGoalColor);
 const savedMode = gotEm('darkMode', false);
 export const darkMode = writable(savedMode);
 
-const savedZoom = gotEm('zoom', 1);
-export const zoom = writable(savedZoom);
+const savedFontSize = gotEm('fontSize', 1);
+export const fontSize = writable(savedFontSize);
 
 
-export const defaultShow = {
+const defaultShow = {
   season: true,
   seasonEndDate: true,
   totalLift: true,
