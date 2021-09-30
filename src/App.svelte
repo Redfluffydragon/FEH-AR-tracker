@@ -15,14 +15,10 @@
   } from './stores';
 
 	/**
-	 * modal to view lift gain per season?
 	 * Last defense date:
 		* input last defense date by number of hours ago
-		* paste last defense date in?
-	 * Settings:
-		* green total lift if greater than lift goal? Red if it's not possible to make it?
 	 * don't store title text and stuff in localStorage? or add version control?
-	 * Save past seasons
+	 * Save past seasons?
 		* set starting lift for next season based on total lift from the previous season
 		* set liftGoal based on last season's lift?
 	 * fix defense margin when it's no longer possible to reach your goal - currently displays too high (not zero)
@@ -31,6 +27,7 @@
 	$: localStorage.setItem('showColumns', JSON.stringify($showColumns));
 	$: localStorage.setItem('columnData', JSON.stringify($columnData));
 	$: localStorage.setItem('thisWeekData', JSON.stringify($thisWeekData));
+	$: localStorage.setItem('goalColor', JSON.stringify($goalColor));
 	$: localStorage.setItem('darkMode', JSON.stringify($darkMode));
 	$: localStorage.setItem('fontSize', JSON.stringify($fontSize));
 	$: localStorage.setItem('showTooltips', JSON.stringify($showTooltips));
@@ -113,6 +110,12 @@
 
 		--header-scale: 3em;
 		--font-size: 1;
+
+		--goal-lift-bg: var(--bg);
+		--goal-offenses-bg: var(--bg);
+		--goal-min-lift-bg: var(--bg);
+		--goal-defense-margin-bg: var(--bg);
+		--goal-max-lift-bg: var(--bg);
 
 		background: var(--bg);
 	}

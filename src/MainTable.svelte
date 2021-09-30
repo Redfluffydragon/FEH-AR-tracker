@@ -8,6 +8,8 @@
 	import {
     dataKeys,
 		edit,
+    darkMode,
+    goalColor,
 		showColumns,
 		columnData,
 		thisWeekData as data,
@@ -35,6 +37,11 @@
     return `${msToDate.getMonth() + 1}/${msToDate.getDate()}/${msToDate.getFullYear()} ${msToDate.toTimeString().slice(0, 5)}`;
   }
 
+  /**
+   * Get the time left under lift loss control from the date of the last defense not under LLC.
+   * @param {Date} lastDefenseDate The date of the last defense not under LLC.
+   * 
+   */
   function getLLCTimeLeft(lastDefenseDate) {
 		if (!lastDefenseDate) {
 			return 0;
@@ -44,6 +51,10 @@
 		return Math.max((lastDefenseDate.valueOf() + 7.2e+7 - now), 0);
 	}
 
+  /**
+   * Get the time until you can lose one less defense than you can now.
+   * @param {Date} lastDefenseDate
+   */
 	function getTimeToFewerDef(lastDefenseDate) {
 		lastDefenseDate = new Date(lastDefenseDate);
 
@@ -106,8 +117,8 @@
     offensesToGoal:
       Math.max(Math.ceil(($data.liftGoal - $data.totalLift) / $data.liftGainPerOffense[season]), 0),
     defenseMargin:
-      Math.floor(($data.liftGainPerOffense[season] * $data.offensesLeftInSeason + $data.totalLift - $data.liftGoal)
-      / $data.liftLossPerDefense),
+      Math.max(Math.floor(($data.liftGainPerOffense[season] * $data.offensesLeftInSeason + $data.totalLift - $data.liftGoal)
+      / $data.liftLossPerDefense), 0),
     maxLift: $data.totalLift + $data.liftGainPerOffense[season] * $data.offensesLeftInSeason,
     minLift: 
       ($data.totalLift + $data.liftGainPerOffense[season] * $data.offensesLeftInSeason) 
@@ -118,7 +129,7 @@
   }
 
 	function updateTimes() {
-    // Don't update when editing, it makes it freeze
+    // Don't update when editing, it makes everything freeze
 		!$edit && requestAnimationFrame(updateTimes);
 
 		calcValues.LLCTimeLeft = parseTime(getLLCTimeLeft($data.lastDefenseDate));
@@ -136,7 +147,7 @@
 		updateTimes();
 	});
 
-  // For drag and drop
+  // For editing: drag-n-drop and show/hide columns
 	$: items = $columnData;
 	// const flipDurationMs = (d) => Math.sqrt(d) * 40; // DNDZones can't handle function for flipDuration?
 	const flipDurationMs = 300;
@@ -179,6 +190,22 @@
 		dragDisabled = true;
     setTimeout(updateTimes, 500); // Otherwise the table doesn't redraw correctly
 	}
+
+  // Goal higlighting
+  $: goodColor = $darkMode ? 'rgb(0, 80, 0)' : 'rgb(117, 255, 117)';
+  $: badColor = $darkMode ? 'rgb(80, 0, 0)' : 'rgb(255, 117, 116)';
+
+  $: document.body.style.setProperty('--goal-lift-bg',
+    calcValues.liftToGoal <= 0 && $goalColor ? goodColor : 'var(--bg)');
+  $: document.body.style.setProperty('--goal-offenses-bg',
+    calcValues.offensesToGoal > $data.offensesLeftInSeason && $goalColor ? badColor : 'var(--bg)');
+  $: document.body.style.setProperty('--goal-min-lift-bg',
+    calcValues.minLift >= $data.liftGoal && $goalColor ? goodColor : 'var(--bg)');
+  $: document.body.style.setProperty('--goal-defense-margin-bg',
+    calcValues.defenseMargin >= calcValues.defensesCanLose && $goalColor ? goodColor : 'var(--bg)');
+  $: document.body.style.setProperty('--goal-max-lift-bg',
+    calcValues.maxLift < $data.liftGoal && $goalColor ? badColor : 'var(--bg)');
+
 </script>
 
 <div use:dndzone="{{items, flipDurationMs, dragDisabled, dropTargetStyle}}" 
@@ -189,7 +216,7 @@
       <div class="column" id="{item.value + 'Column'}" animate:flip="{{duration: flipDurationMs}}" class:hide="{!($edit || $showColumns[item.value])}" >
         <div class="header centerFlex" title="{item.title}">
           {#if item.value === 'timeToFewerDefenses'}
-            Time to {Math.max(calcValues.defensesCanLose - 1, 0)} defense{calcValues.defensesCanLose == 2 ? '' : 's'}
+            Time to {Math.max(calcValues.defensesCanLose - 1, 0)} Defense{calcValues.defensesCanLose == 2 ? '' : 's'}
           {:else}
             {item.name}
           {/if}
@@ -348,6 +375,26 @@
 
   #lastDefenseDateColumn {
     grid-column: auto / span 2;
+  }
+
+  #liftToGoalCell {
+    background: var(--goal-lift-bg);
+  }
+
+  #offensesToGoalCell {
+    background: var(--goal-offenses-bg);
+  }
+
+  #minLiftCell {
+    background: var(--goal-min-lift-bg);
+  }
+
+  #defenseMarginCell, #defensesCanLoseCell {
+    background: var(--goal-defense-margin-bg);
+  }
+
+  #maxLiftCell {
+    background: var(--goal-max-lift-bg);
   }
 
   .seasonIcon {
