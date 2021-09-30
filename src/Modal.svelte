@@ -35,10 +35,17 @@
       <h3>{props.title}</h3>
       <slot name="content"></slot>
       <br>
-      <div>
-        <button on:click="{showHide}" class="saveBtn">Close</button>
-        <!-- <button on:click="{showHide}">Close</button> -->
-      </div>
+      <slot name="actionBtns">
+        <div>
+          {#if props.goBtn}
+            <button on:click="{() => {
+              props.goFunc();
+              showHide();
+              }}" class="saveBtn">{props.goBtn}</button>
+          {/if}
+            <button on:click="{showHide}" class="closeBtn">Close</button>
+        </div>
+      </slot>
     </div>
   </div>
 {/if}
@@ -46,8 +53,7 @@
 
 <style>
   .openBtn {
-		position: absolute;
-    margin: 1rem;
+    z-index: 0;
 	}
 
   .imgBtn {
@@ -62,6 +68,13 @@
     width: 100%;
     height: 100%;
     filter: invert(var(--invert));
+  }
+
+  .closeBtn {
+    background: var(--bg);
+    border: 2px solid silver;
+    border-radius: 4px;
+    box-sizing: border-box;
   }
 
   .shadow {
@@ -80,13 +93,16 @@
     position: relative;
     top: 3rem;
     background-color: var(--bg);
-    box-shadow: 10px 10px 15px rgba(30, 30, 30, 0.5);
+    box-shadow: 10px 10px 15px rgba(0, 0, 0, 0.5);
     padding: 20px;
     border-radius: 7px;
     max-width: 80vw;
     height: min-content;
     z-index: 2;
     min-width: 25vw;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
   }
 </style>
