@@ -11,8 +11,6 @@
 		showColumns,
 		columnData,
 		thisWeekData as data,
-    singleOffenseDisplay,
-thisWeekData
   } from './stores';
 
   /**
@@ -82,7 +80,6 @@ thisWeekData
   }
 
   let season = getSeason(new Date());
-  $: SOFNum = $singleOffenseDisplay ? 1 : 2;
 
   /**
    * Get the number of defenses it is possible to lose based on the current time and the time of the last defense that counted
@@ -107,7 +104,7 @@ thisWeekData
     seasonEndDate: parseDate(getEndDate()).slice(0, -5),
     liftToGoal: Math.max($data.liftGoal - $data.totalLift, 0),
     offensesToGoal:
-      Math.max(Math.ceil(($data.liftGoal - $data.totalLift) / $data.liftGainPerOffense[season]), 0) / SOFNum,
+      Math.max(Math.ceil(($data.liftGoal - $data.totalLift) / $data.liftGainPerOffense[season]), 0),
     defenseMargin:
       Math.floor(($data.liftGainPerOffense[season] * $data.offensesLeftInSeason + $data.totalLift - $data.liftGoal)
       / $data.liftLossPerDefense),

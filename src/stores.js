@@ -39,9 +39,6 @@ export const thisWeekData = writable(savedData);
 export const edit = writable(false);
 
 
-const savedSingleOffenseDisplay = gotEm('singleOffenseDisplay', true);
-export const singleOffenseDisplay = writable(savedSingleOffenseDisplay);
-
 const savedGoalColor = gotEm('goalColor', false);
 export const goalColor = writable(savedGoalColor);
 

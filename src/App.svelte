@@ -9,7 +9,6 @@
 		darkMode,
 		goalColor,
 		thisWeekData,
-		singleOffenseDisplay,
 		fontSize,
 		showTooltips,
 		dragged
@@ -22,7 +21,6 @@
 		* paste last defense date in?
 	 * Settings:
 		* green total lift if greater than lift goal? Red if it's not possible to make it?
-		* display number of double vs single offense matches?
 	 * don't store title text and stuff in localStorage? or add version control?
 	 * Save past seasons
 		* set starting lift for next season based on total lift from the previous season
@@ -34,7 +32,6 @@
 	$: localStorage.setItem('columnData', JSON.stringify($columnData));
 	$: localStorage.setItem('thisWeekData', JSON.stringify($thisWeekData));
 	$: localStorage.setItem('darkMode', JSON.stringify($darkMode));
-	$: localStorage.setItem('singleOffenseDisplay', JSON.stringify($singleOffenseDisplay));
 	$: localStorage.setItem('fontSize', JSON.stringify($fontSize));
 	$: localStorage.setItem('showTooltips', JSON.stringify($showTooltips));
 
@@ -65,10 +62,6 @@
 
 <Modal props="{settingsProps}">
 	<div slot="content">
-		<button class:active="{!$singleOffenseDisplay}" on:click="{() => {
-			$singleOffenseDisplay = !$singleOffenseDisplay;
-		}}">Display number of double offense matches</button>
-		<br>
 		<button class:active="{$goalColor}" on:click="{() => {
 			$goalColor = !$goalColor;
 		}}">Color display for goal</button>
