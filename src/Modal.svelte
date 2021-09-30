@@ -8,10 +8,6 @@
     show = !show;
   }
 
-  function saveEdit() {
-    
-  }
-
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       show = false;
@@ -25,7 +21,7 @@
   }, false);
 </script>
 
-<button class="openBtn" on:click="{showHide}">
+<button class="openBtn" class:imgBtn="{props.imageBtn}" on:click="{showHide}">
   {#if props.imageBtn} 
     <img class="icon-img" src="{props.src}" alt="{props.title} button"/>
   {:else}
@@ -51,12 +47,16 @@
 <style>
   .openBtn {
 		position: absolute;
-		width: 2em;
+    margin: 1rem;
+	}
+
+  .imgBtn {
+    width: 2em;
 		height: 2em;
     background-color: transparent;
     border-radius: 50%;
     padding: 0;
-	}
+  }
 
   .icon-img {
     width: 100%;
@@ -73,19 +73,20 @@
     background-color: rgba(35, 35, 35, 0.5);
     display: flex;
     justify-content: center;
-    padding-top: 3em;
     z-index: 1;
   }
 
   .modal {
     position: relative;
+    top: 3rem;
     background-color: var(--bg);
     box-shadow: 10px 10px 15px rgba(30, 30, 30, 0.5);
     padding: 20px;
     border-radius: 7px;
-    width: clamp(min-content, 30vw, 90vw);
+    max-width: 80vw;
     height: min-content;
     z-index: 2;
     min-width: 25vw;
+    text-align: center;
   }
 </style>

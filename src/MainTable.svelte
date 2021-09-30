@@ -296,7 +296,7 @@
   
 	.column {
     display: grid;
-    grid-template-rows: 1fr 3rem;
+    grid-template-rows: 1fr 3em;
     border: hsl(208, 85%, 64%) solid 2px;
     border-radius: 7px;
     transition: opacity 0.5s linear visibility 0s;
@@ -320,15 +320,15 @@
   }
 
   input, select {
-    margin-top: 0.4rem;
     border-radius: 7px;
   }
   
   input[type=datetime-local]::-webkit-calendar-picker-indicator {
     filter: invert(var(--invert));
+    cursor: pointer;
   }
 
-  input[type='number']::-webkit-inner-spin-button { 
+  input[type=number]::-webkit-inner-spin-button {
     opacity: 1;
   }
 
