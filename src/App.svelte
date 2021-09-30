@@ -11,17 +11,17 @@
 		thisWeekData,
 		fontSize,
 		showTooltips,
-		dragged
+		dragged,
+		exportOptions
   } from './stores';
 
 	/**
 	 * Last defense date:
 		* input last defense date by number of hours ago
 	 * don't store title text and stuff in localStorage? or add version control?
-	 * Save past seasons?
+	 * Save past seasons - copy as table to clipboard
 		* set starting lift for next season based on total lift from the previous season
 		* set liftGoal based on last season's lift?
-	 * fix defense margin when it's no longer possible to reach your goal - currently displays too high (not zero)
 	 */
 
 	$: localStorage.setItem('showColumns', JSON.stringify($showColumns));
@@ -31,6 +31,7 @@
 	$: localStorage.setItem('darkMode', JSON.stringify($darkMode));
 	$: localStorage.setItem('fontSize', JSON.stringify($fontSize));
 	$: localStorage.setItem('showTooltips', JSON.stringify($showTooltips));
+	$: localStorage.setItem('exportOptions', JSON.stringify($exportOptions));
 
 	onMount(() => {
 		$darkMode && document.body.classList.add('dark-mode');
@@ -57,34 +58,35 @@
 </script>
 <div class="background"></div>
 
-<Modal props="{settingsProps}">
-	<div slot="content">
-		<button class:active="{$goalColor}" on:click="{() => {
-			$goalColor = !$goalColor;
-		}}">Color display for goal</button>
-		<br>
-		<button class:active="{$darkMode}" on:click="{
-			() => {
-				$darkMode ? document.body.classList.remove('dark-mode') : document.body.classList.add('dark-mode');
-				$darkMode = !$darkMode;
-			}
-		}">Dark mode</button>
-		<br>
-		<input type="range" min=1 max=1.5 step=0.05 id="fontSizeSlider" bind:value="{$fontSize}">
-		<label for="fontSizeSlider">Font size: {Math.round($fontSize * 100)}%</label>
-		<br>
-		<button class:active="{!$showTooltips}" on:click="{() => { $showTooltips = !$showTooltips }}">Hide (touch-only) tooltips</button>
-		<br>
-		<button on:click="{() => localStorage.clear()}">Clear localStorage</button>
-	</div>
-</Modal>
+<div class="settings">
+	<Modal props="{settingsProps}">
+		<div slot="content" class="center fullWidth">
+			<button class:active="{$goalColor}" on:click="{() => {
+				$goalColor = !$goalColor;
+			}}">Color display for goal</button>
+			<br>
+			<button class:active="{$darkMode}" on:click="{
+				() => {
+					$darkMode ? document.body.classList.remove('dark-mode') : document.body.classList.add('dark-mode');
+					$darkMode = !$darkMode;
+				}
+			}">Dark mode</button>
+			<br>
+			<input type="range" min=1 max=1.5 step=0.05 id="fontSizeSlider" bind:value="{$fontSize}">
+			<label for="fontSizeSlider">Font size: {Math.round($fontSize * 100)}%</label>
+			<br>
+			<button class:active="{!$showTooltips}" on:click="{() => { $showTooltips = !$showTooltips }}">Hide (touch-only) tooltips</button>
+			<br>
+			<button on:click="{() => localStorage.clear()}">Clear localStorage</button>
+		</div>
+	</Modal>
+</div>
 
-<main class="flex flexColumn">
+<main class="center">
 	<h1>Fire Emblem Heroes | Aether Raids lift calculator</h1>
 
 	<MainTable />
 
-	<br>
 	<br>
 	<br>
 </main>
@@ -139,6 +141,11 @@
 		background: var(--bg);
 	}
 
+	:global(input[type=checkbox]) {
+		width: 0.7em;
+		height: 0.7em;
+	}
+
 	:global(button) {
 		color: var(--btn-color);
 		background: var(--btn-bg);
@@ -159,15 +166,17 @@
 
 	:global(.saveBtn) {
 		background: var(--savebtn-bg);
+		border: 2px solid var(--savebtn-bg);
 	}
 
 	main {
-		text-align: center;
 		padding: 1rem;
 		width: 100%;
 		gap: 1rem;
 		min-height: 100%;
 		box-sizing: border-box;
+		flex-flow: column;
+		display: flex;
 	}
 
 	h1 {
@@ -182,15 +191,20 @@
 		margin-top: calc(0.67em * var(--font-size));
 	}
 
+	.settings {
+		padding: 1rem;
+		position: absolute;
+	}
+
 	.active {
 		box-shadow: inset 0 0 15px 3px var(--active-highlight);
 	}
 
-	.flexColumn {
-		flex-flow: column;
+	.center {
+		text-align: center;
 	}
 
-	.flex {
-		display: flex;
+	.fullWidth * {
+		width: 100%;
 	}
 </style>
