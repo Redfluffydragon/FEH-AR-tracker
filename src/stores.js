@@ -51,6 +51,11 @@ export const darkMode = writable(savedMode);
 const savedFontSize = gotEm('fontSize', 1);
 export const fontSize = writable(savedFontSize);
 
+const savedShowTooltips = gotEm('showTooltips', true);
+export const showTooltips = writable(savedShowTooltips);
+
+export const dragged = writable(false);
+
 
 const defaultShow = {
   season: true,
@@ -91,14 +96,14 @@ const defaultColumns = [
   {
     id: 2,
     name: 'Total Lift',
-    title: 'Manually input',
+    title: '',
     value: 'totalLift',
     userInput: true,
   },
   {
     id: 3,
     name: 'Lift Gain per Offense',
-    title: 'Lift gain per single offense, not double',
+    title: 'Lift gain per single offense',
     value: 'liftGainPerOffense',
     userInput: true,
   },
@@ -112,31 +117,32 @@ const defaultColumns = [
   {
     id: 5,
     name: 'Lift to Goal',
+    title: '',
     value: 'liftToGoal',
   },
   {
     id: 6,
     name: 'Offenses to Goal',
-    title: 'Number of single offense matches needed to reach your lift goal',
+    title: 'Number of single offense matches needed to reach your goal',
     value: 'offensesToGoal',
   },
   {
     id: 7,
     name: 'Offenses Left',
-    title: 'Number of single offense matches possible to play (manually input)',
+    title: 'Number of single offense matches possible to play (16 is the most possible in a single season)',
     value: 'offensesLeftInSeason',
     userInput: true,
   },
   {
     id: 8,
     name: 'Max lift',
-    title: 'Maximum lift possible assuming perfect offense',
+    title: 'Maximum lift possible assuming perfect offense and defense from now',
     value: 'maxLift',
   },
   {
     id: 9,
     name: 'Min lift',
-    title: 'Minimum lift possible assuming perfect offense (lose all defenses)',
+    title: 'Minimum lift possible assuming perfect offense from now (lose all defenses)',
     value: 'minLift',
   },
   {
@@ -154,13 +160,13 @@ const defaultColumns = [
   {
     id: 12,
     name: 'Time to _ defenses',
-    title: 'Time until it\'s only possible to lose __ defenses',
+    title: 'Time until it\'s possible to lose one less defense than you can now',
     value: 'timeToFewerDefenses',
   },
   {
     id: 13,
     name: 'Last non-LLC Defense',
-    title: 'The date of the last defense you had that was not covered by lift loss control (manually input)',
+    title: 'The date and time of the last defense you had that was not covered by lift loss control',
     value: 'lastDefenseDate',
     userInput: true,
   },
@@ -172,8 +178,8 @@ const defaultColumns = [
   },
   {
     id: 15,
-    name: 'Lift Goal',
-    title: 'Your lift goal (manually input)',
+    name: 'Goal',
+    title: '',
     value: 'liftGoal',
     userInput: true,
   },

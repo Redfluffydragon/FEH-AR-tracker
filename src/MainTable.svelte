@@ -3,6 +3,7 @@
 	import { flip } from "svelte/animate";
   import { fly} from "svelte/transition";
 	import { dndzone } from 'svelte-dnd-action';
+  import Tooltip from './Tooltip.svelte';
 
 	import {
     dataKeys,
@@ -10,7 +11,8 @@
 		showColumns,
 		columnData,
 		thisWeekData as data,
-    singleOffenseDisplay
+    singleOffenseDisplay,
+thisWeekData
   } from './stores';
 
   /**
@@ -187,7 +189,7 @@
      on:finalize="{handleDnd}" 
      class="mainGrid">
   {#each items as item(item.id)}
-      <div class="column" id="{item.value}" animate:flip="{{duration: flipDurationMs}}" class:hide="{!($edit || $showColumns[item.value])}" >
+      <div class="column" id="{item.value + 'Column'}" animate:flip="{{duration: flipDurationMs}}" class:hide="{!($edit || $showColumns[item.value])}" >
         <div class="header centerFlex" title="{item.title}">
           {#if item.value === 'timeToFewerDefenses'}
             Time to {Math.max(calcValues.defensesCanLose - 1, 0)} defense{calcValues.defensesCanLose == 2 ? '' : 's'}
@@ -262,7 +264,12 @@
           <div in:fly="{{y: -30}}" class="centerFlex">
             <input type="checkbox" name="{item.name}" class="editCheckbox" bind:checked="{$showColumns[item.value]}">
           </div>
-        {/if}  
+        {/if}
+        {#if item.value === 'season'}
+          <Tooltip props="{{id: item.value + 'Column', text: calcValues.season, touchOnly: true}}"/>
+        {:else}
+          <Tooltip props="{{id: item.value + 'Column', text: item.title, touchOnly: true}}"/>
+        {/if}
       </div>
   {/each}
 </div>
@@ -296,6 +303,7 @@
   
 	.column {
     display: grid;
+    position: relative;
     grid-template-rows: 1fr 3em;
     border: hsl(208, 85%, 64%) solid 2px;
     border-radius: 7px;
@@ -341,7 +349,7 @@
 		width: 23.5ch;
 	}
 
-  #lastDefenseDate {
+  #lastDefenseDateColumn {
     grid-column: auto / span 2;
   }
 

@@ -10,7 +10,9 @@
 		goalColor,
 		thisWeekData,
 		singleOffenseDisplay,
-		fontSize
+		fontSize,
+		showTooltips,
+		dragged
   } from './stores';
 
 	/**
@@ -20,8 +22,7 @@
 		* paste last defense date in?
 	 * Settings:
 		* green total lift if greater than lift goal? Red if it's not possible to make it?
-		* display number of double vs single offense matches
-	 * tooltips or something for mobile to see title text?
+		* display number of double vs single offense matches?
 	 * don't store title text and stuff in localStorage? or add version control?
 	 * Save past seasons
 		* set starting lift for next season based on total lift from the previous season
@@ -35,9 +36,18 @@
 	$: localStorage.setItem('darkMode', JSON.stringify($darkMode));
 	$: localStorage.setItem('singleOffenseDisplay', JSON.stringify($singleOffenseDisplay));
 	$: localStorage.setItem('fontSize', JSON.stringify($fontSize));
+	$: localStorage.setItem('showTooltips', JSON.stringify($showTooltips));
 
 	onMount(() => {
 		$darkMode && document.body.classList.add('dark-mode');
+
+		document.addEventListener('touchmove', () => {
+			$dragged = true;
+		}, false);
+
+		document.addEventListener('touchstart', () => {
+			$dragged = false;
+		}, false);
 	});
 
 	const settingsProps = {
@@ -73,12 +83,14 @@
 		<input type="range" min=1 max=1.5 step=0.05 id="fontSizeSlider" bind:value="{$fontSize}">
 		<label for="fontSizeSlider">Font size: {Math.round($fontSize * 100)}%</label>
 		<br>
+		<button class:active="{!$showTooltips}" on:click="{() => { $showTooltips = !$showTooltips }}">Hide (touch-only) tooltips</button>
+		<br>
 		<button on:click="{() => localStorage.clear()}">Clear localStorage</button>
 	</div>
 </Modal>
 
 <main class="flex flexColumn">
-	<h1>FEH AR season lift calculator</h1>
+	<h1>Fire Emblem Heroes | Aether Raids lift calculator</h1>
 
 	<MainTable />
 
@@ -170,9 +182,8 @@
 		text-shadow:
 		0 0 2px var(--bg),
 		0 0 5px var(--bg),
-		0 0 10px var(--bg),
-		0 0 15px var(--bg),
-		0 0 20px var(--bg);
+		0 0 10px var(--bg);
+		margin-top: calc(0.67em * var(--font-size));
 	}
 
 	.active {
