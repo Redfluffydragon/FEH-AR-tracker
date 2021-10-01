@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { flip } from "svelte/animate";
-  import { fly} from "svelte/transition";
+  import { fly } from "svelte/transition";
 	import { dndzone } from 'svelte-dnd-action';
   import Tooltip from './Tooltip.svelte';
 	import Modal from './Modal.svelte';
@@ -12,14 +12,20 @@
     darkMode,
     goalColor,
 		showColumns,
-		columnData,
-		thisWeekData as data,
-    exportOptions
+		columnOrder,
+    columnData,
+		inputData as data,
+    exportOptions,
+    lastStoredSeason,
+    autoReset,
+    tiers
   } from './stores';
+
+  import { getEndDate } from "./utils";
 
   /**
    * Take a duration in milliseconds and convert it to hh:mm:ss format
-   * @param {A duration in milliseconds} milliseconds 
+   * @param {A duration in milliseconds} milliseconds
    * @returns A time string
    */
   function parseTime(milliseconds) {
@@ -31,18 +37,18 @@
 
   /**
    * Convert a time in milliseconds to a human-readable string
-   * @param {Number} milliseconds 
+   * @param {Number} milliseconds
    * @returns A date string
    */
   function parseDate(milliseconds) {
     const msToDate = new Date(milliseconds);
-    return `${msToDate.getMonth() + 1}/${msToDate.getDate()}/${msToDate.getFullYear()} ${msToDate.toTimeString().slice(0, 5)}`;
+    return `${msToDate.getMonth() + 1}/${msToDate.getDate()}/${msToDate.getFullYear()}`;
   }
 
   /**
    * Get the time left under lift loss control from the date of the last defense not under LLC.
    * @param {Date} lastDefenseDate The date of the last defense not under LLC.
-   * 
+   *
    */
   function getLLCTimeLeft(lastDefenseDate) {
 		if (!lastDefenseDate) {
@@ -67,18 +73,6 @@
 	}
 
   /**
-   * Get the end date of the current season
-   * @returns A date object
-   */
-  function getEndDate() {
-    const now = new Date();
-    const seasonEndDate = new Date();
-    seasonEndDate.setDate(now.getDate() + (7 + 1 - now.getDay()) % 7);
-    seasonEndDate.setHours(17, 0, 0); // have to correct for daylight saving time
-    return seasonEndDate;
-  }
-
-  /**
    * Get the current AR season from the input date
    * @param {Date} date
    * @returns 1 for Light/Dark season, 0 for Astra/Anima season
@@ -96,7 +90,7 @@
 
   /**
    * Get the number of defenses it is possible to lose based on the current time and the time of the last defense that counted
-   * @param {Date} lastDefenseDate 
+   * @param {Date} lastDefenseDate
    * @param {Boolean} round Whether or not to round the number returned
    * @returns Number
    */
@@ -114,21 +108,22 @@
   $: calcValues = {
     season: season ? 'Light/Dark' : 'Astra/Anima',
     seasonImgSrc: season ? 'img/light-and-dark.png' : 'img/astra-and-anima.png',
-    seasonEndDate: parseDate(getEndDate()).slice(0, -5),
+    seasonEndDate: parseDate($lastStoredSeason),
     liftToGoal: Math.max($data.liftGoal - $data.totalLift, 0),
     offensesToGoal:
       Math.max(Math.ceil(($data.liftGoal - $data.totalLift) / $data.liftGainPerOffense[season]), 0),
     defenseMargin:
       Math.max(Math.floor(($data.liftGainPerOffense[season] * $data.offensesLeftInSeason + $data.totalLift - $data.liftGoal)
-      / $data.liftLossPerDefense), 0),
+      / $data.liftLossPerDefense[season]), 0),
     maxLift: $data.totalLift + $data.liftGainPerOffense[season] * $data.offensesLeftInSeason,
-    minLift: 
-      ($data.totalLift + $data.liftGainPerOffense[season] * $data.offensesLeftInSeason) 
-      - $data.liftLossPerDefense * getDefCanLose($data.lastDefenseDate),
+    minLift:
+      ($data.totalLift + $data.liftGainPerOffense[season] * $data.offensesLeftInSeason)
+      - $data.liftLossPerDefense[season] * getDefCanLose($data.lastDefenseDate),
     LLCTimeLeft: parseTime(getLLCTimeLeft($data.lastDefenseDate)),
 		timeToFewerDefenses: getTimeToFewerDef($data.lastDefenseDate),
 		defensesCanLose: getDefCanLose($data.lastDefenseDate),
   }
+  let testDate;
 
 	function updateTimes() {
     // Don't update when editing, it makes everything freeze
@@ -137,37 +132,40 @@
 		calcValues.LLCTimeLeft = parseTime(getLLCTimeLeft($data.lastDefenseDate));
 		calcValues.timeToFewerDefenses = getTimeToFewerDef($data.lastDefenseDate);
 		calcValues.defensesCanLose = getDefCanLose($data.lastDefenseDate);
-    calcValues.seasonEndDate = parseDate(getEndDate()).slice(0, -5);
+    // calcValues.seasonEndDate = parseDate(getEndDate());
 
-    season = getSeason(new Date());
-    calcValues.season = season ? 'Light/Dark' : 'Astra/Anima';
-    calcValues.seasonImgSrc = season ? 'img/light-and-dark.png' : 'img/astra-and-anima.png';
+    season = getSeason(new Date($lastStoredSeason - 1000));
+
+    const now  = new Date();
+    if ($autoReset && now.valueOf() + testDate > $lastStoredSeason) {
+      reset();
+    }
 	}
-
 
 	onMount(() => {
 		updateTimes();
+    testDate = $lastStoredSeason.valueOf() - (new Date()).valueOf() - 10e3;
 	});
 
   // For editing: drag-n-drop and show/hide columns
-	$: items = $columnData;
+	$: items = $columnOrder;
 	// const flipDurationMs = (d) => Math.sqrt(d) * 40; // DNDZones can't handle function for flipDuration?
 	const flipDurationMs = 300;
 	let dragDisabled = true;
   const dropTargetStyle = {outline: 'black solid 3px'};
 
 	function handleDnd(e) {
-		$columnData = e.detail.items;
+		$columnOrder = e.detail.items;
 	}
 
   let tempShowColumns = {};
-	let tempColumnData = [];
+	let tempColumnOrder = [];
 
 	function startEdit() {
 		for (let i of dataKeys) {
 			tempShowColumns[i] = $showColumns[i];
 		}
-		$columnData.forEach((item, idx) => tempColumnData[idx] = item);
+		$columnOrder.forEach((item, idx) => tempColumnOrder[idx] = item);
 		
 		$edit = true;
 		// Otherwise the drag and drop activates before the hidden columns are shown and it messes everything up
@@ -186,7 +184,7 @@
 		for (let i of dataKeys) {
 			$showColumns[i] = tempShowColumns[i];
 		}
-		tempColumnData.forEach((item, idx) => $columnData[idx] = item);
+		tempColumnOrder.forEach((item, idx) => $columnOrder[idx] = item);
 
 		$edit = false;
 		dragDisabled = true;
@@ -208,81 +206,68 @@
   $: document.body.style.setProperty('--goal-max-lift-bg',
     calcValues.maxLift < $data.liftGoal && $goalColor ? badColor : 'var(--bg)');
 
-  // For export
-  function exportCSV() {
-    let csv = 'data:text/csv;charset=utf-8,';
+  // For exporting
+  function getAllData() {
+    const dataArr = [];
+
     if ($exportOptions.exportHeaders) {
-      for (let i of $columnData) {
+      const headerRow = [];
+      for (let i of $columnOrder) {
         if (!$exportOptions.onlyShown || ($exportOptions.onlyShown && $showColumns[i.value])) {
-          csv += i.name + ',';
+          headerRow.push(columnData[i.value].name);
         }
       }
-      csv += '\n';
+      dataArr.push(headerRow);
     }
-    for (let i of $columnData) {
+
+    const dataRow = [];
+    for (let i of $columnOrder) {
       if (!$exportOptions.onlyShown || ($exportOptions.onlyShown && $showColumns[i.value])) {
         if (i.value === 'lastDefenseDate' ||
           i.value === 'totalLift' ||
-          i.value === 'liftLossPerDefense' ||
           i.value === 'offensesLeftInSeason' ||
           i.value === 'liftGoal') {
-          csv += $data[i.value] + ',';
+          dataRow.push($data[i.value]);
         }
-        else if (i.value === 'liftGainPerOffense') {
-          csv += $data[i.value][season] + ',';
+        else if (i.value === 'liftGainPerOffense' || i.value === 'liftLossPerDefense') {
+          dataRow.push($data[i.value][season]);
         }
         else {
-          csv += calcValues[i.value] + ',';
+          dataRow.push(calcValues[i.value]);
         }
       }
     }
+    dataArr.push(dataRow);
+
+    return dataArr;
+  }
+
+  function exportCSV() {
+    const dataArr = getAllData();
+    let csv = 'data:text/csv;charset=utf-8,' + dataArr.map(i => i.join(',')).join('\n');
+
     const encodedURI = encodeURI(csv);
     const csvLink = document.createElement("a");
     csvLink.setAttribute("href", encodedURI);
-    csvLink.setAttribute('download', `AR_season_${calcValues.seasonEndDate}.csv`);
+    csvLink.setAttribute('download', `AR_season_${calcValues.seasonEndDate.replace(/\//g, '-')}.csv`);
     document.body.appendChild(csvLink);
     csvLink.click();
     csvLink.remove();
-
-    window.open(encodedURI);
-    console.log(encodedURI);
   }
 
   function copyToClipboard() {
+    const dataArr = getAllData();
     const table = document.createElement('table');
-    if ($exportOptions.exportHeaders) {
-      const headerRow = document.createElement('thead');
-      for (let i of $columnData) {
-        if (!$exportOptions.onlyShown || ($exportOptions.onlyShown && $showColumns[i.value])) {
-          const headerCell = document.createElement('th');
-          headerCell.textContent = i.name;
-          headerRow.appendChild(headerCell);
-        }
-      }
-      table.appendChild(headerRow);
-    }
-    const dataRow = document.createElement('tr');
-    for (let i of $columnData) {
-      if (!$exportOptions.onlyShown || ($exportOptions.onlyShown && $showColumns[i.value])) {
+    
+    for (let i of dataArr) {
+      const newRow = document.createElement('tr');
+      for (let j of i) {
         const newCell = document.createElement('td');
-
-        if (i.value === 'lastDefenseDate' ||
-          i.value === 'totalLift' ||
-          i.value === 'liftLossPerDefense' ||
-          i.value === 'offensesLeftInSeason' ||
-          i.value === 'liftGoal') {
-          newCell.textContent = $data[i.value];
-        }
-        else if (i.value === 'liftGainPerOffense') {
-          newCell.textContent = $data[i.value][season];
-        }
-        else {
-          newCell.textContent = calcValues[i.value];
-        }
-        dataRow.appendChild(newCell);
+        newCell.textContent = j;
+        newRow.appendChild(newCell);
       }
+      table.appendChild(newRow);
     }
-    table.appendChild(dataRow);
 
     $exportOptions.noFormatting && (table.style.all = 'unset');
 
@@ -305,19 +290,69 @@
     }
     table.remove();
   }
+
+  function reset() {
+    if ($data.totalLift >= 20800) {
+      $data.totalLift = 18000;
+      $data.liftGoal = 20800;
+    }
+    else if ($data.totalLift > 16000) {
+      $data.totalLift = 11800;
+      $data.liftGoal = 13400;
+    }
+    else if ($data.totalLift >= 13400) {
+      $data.totalLift = 18000;
+      $data.liftGoal = 20800;
+    }
+    else if ($data.totalLift >= 11000) {
+      $data.totalLift = 11000;
+      $data.liftGoal = 13400;
+    }
+    else if ($data.totalLift >= 9400) {
+      $data.totalLift = 9400;
+      $data.liftGoal = 11000;
+    }
+    else if ($data.totalLift >= 8200) {
+      $data.totalLift = 8200;
+      $data.liftGoal = 9400;
+    }
+    else if ($data.totalLift >= 7200) {
+      $data.totalLift = 7200;
+      $data.liftGoal = 8200;
+    }
+    else if ($data.totalLift >= 6500) {
+      $data.totalLift = 6500;
+      $data.liftGoal = 7200;
+    }
+    else if ($data.totalLift >= 6000) {
+      $data.totalLift = 6000;
+      $data.liftGoal = 6500;
+    }
+    else if ($data.totalLift >= 4400) {
+      $data.totalLift = Math.floor($data.totalLift / 400);
+      $data.liftGoal = $data.totalLift + 400;
+    }
+    else {
+      $data.liftGoal = Math.floor($data.totalLift / 400) + 400;
+    }
+
+    $data.offensesLeftInSeason = 16;
+    $data.lastDefenseDate = null;
+    $lastStoredSeason = getEndDate().valueOf();
+  }
 </script>
 
-<div use:dndzone="{{items, flipDurationMs, dragDisabled, dropTargetStyle}}" 
-     on:consider="{handleDnd}" 
-     on:finalize="{handleDnd}" 
+<div use:dndzone="{{items, flipDurationMs, dragDisabled, dropTargetStyle}}"
+     on:consider="{handleDnd}"
+     on:finalize="{handleDnd}"
      class="mainGrid">
   {#each items as item(item.id)}
       <div class="column" id="{item.value + 'Column'}" animate:flip="{{duration: flipDurationMs}}" class:hide="{!($edit || $showColumns[item.value])}" >
-        <div class="header centerFlex" title="{item.title}">
+        <div class="header centerFlex" title="{columnData[item.value].title}">
           {#if item.value === 'timeToFewerDefenses'}
             Time to {Math.max(calcValues.defensesCanLose - 1, 0)} Defense{calcValues.defensesCanLose == 2 ? '' : 's'}
           {:else}
-            {item.name}
+            {columnData[item.value].name}
           {/if}
         </div>
         {#if !$edit}
@@ -327,52 +362,15 @@
                 <input type="datetime-local" class="dateInput" bind:value="{$data[item.value]}">
               {:else if
                 item.value === 'totalLift' ||
-                item.value === 'liftLossPerDefense' ||
                 item.value === 'offensesLeftInSeason'}
                 <input type="number" pattern="[0-9]*" class="thisSeasonInput" bind:value="{$data[item.value]}">
               {:else if item.value === 'liftGoal'}
-                <select name="liftGoal" id="liftGoalInput" bind:value="{$data.liftGoal}">
-                  <option value=21000>Tier 39</option>
-                  <option value=20800>Tier 38</option>
-                  <option value=20400>Tier 37</option>
-                  <option value=20000>Tier 36</option>
-                  <option value=19600>Tier 35</option>
-                  <option value=19200>Tier 34</option>
-                  <option value=18800>Tier 33</option>
-                  <option value=18400>Tier 32</option>
-                  <option value=18000>Tier 31</option>
-                  <option value=16400>Tier 30</option>
-                  <option value=16000>Tier 29</option>
-                  <option value=13800>Tier 28</option>
-                  <option value=13400>Tier 27</option>
-                  <option value=13000>Tier 26</option>
-                  <option value=12600>Tier 25</option>
-                  <option value=12200>Tier 24</option>
-                  <option value=11800>Tier 23</option>
-                  <option value=11400>Tier 22</option>
-                  <option value=11000>Tier 21</option>
-                  <option value=9400>Tier 20</option>
-                  <option value=8200>Tier 19</option>
-                  <option value=7200>Tier 18</option>
-                  <option value=6500>Tier 17</option>
-                  <option value=6000>Tier 16</option>
-                  <option value=5600>Tier 15</option>
-                  <option value=5200>Tier 14</option>
-                  <option value=4800>Tier 13</option>
-                  <option value=4400>Tier 12</option>
-                  <option value=4000>Tier 11</option>
-                  <option value=3600>Tier 10</option>
-                  <option value=3200>Tier 9</option>
-                  <option value=2800>Tier 8</option>
-                  <option value=2400>Tier 7</option>
-                  <option value=2000>Tier 6</option>
-                  <option value=1600>Tier 5</option>
-                  <option value=1200>Tier 4</option>
-                  <option value=800>Tier 3</option>
-                  <option value=400>Tier 2</option>
-                  <option value=0>Tier 1</option>
+                <select name="liftGoal" id="liftGoalInput" bind:value="{$data[item.value]}">
+                  {#each tiers as tier, i(i)}
+                    <option value="{tier}">Tier {tiers.length - i}</option>
+                  {/each}
                 </select>
-              {:else if item.value === 'liftGainPerOffense'}
+              {:else if item.value === 'liftGainPerOffense' || item.value === 'liftLossPerDefense'}
                 <input type="number" pattern="[0-9]*" class="thisSeasonInput" bind:value="{$data[item.value][season]}">
               {/if}
             {:else}
@@ -384,14 +382,14 @@
             {/if}
           </div>
         {:else}
-          <div in:fly="{{y: -30}}" class="centerFlex">
-            <input type="checkbox" name="{item.name}" class="editCheckbox" bind:checked="{$showColumns[item.value]}">
+          <div in:fly="{{y: 30}}" class="centerFlex">
+            <input type="checkbox" name="{columnData[item.value].name}" class="editCheckbox" bind:checked="{$showColumns[item.value]}">
           </div>
         {/if}
         {#if item.value === 'season'}
           <Tooltip props="{{id: item.value + 'Column', text: calcValues.season, touchOnly: true}}"/>
         {:else}
-          <Tooltip props="{{id: item.value + 'Column', text: item.title, touchOnly: true}}"/>
+          <Tooltip props="{{id: item.value + 'Column', text: columnData[item.value].title, touchOnly: true}}"/>
         {/if}
       </div>
   {/each}
@@ -408,7 +406,7 @@
     <button on:click="{saveEdit}" class="saveBtn">Save</button>
     <button on:click="{cancelEdit}">Cancel</button>
     <button on:click="{() => {for (let i of dataKeys) { $showColumns[i] = true; }}}">Show all</button>
-    <button on:click="{() => { $columnData = $columnData.sort((i1, i2) => i1.id - i2.id) }}">Reset order</button>
+    <button on:click="{() => { $columnOrder = $columnOrder.sort((i1, i2) => i1.id - i2.id) }}">Reset order</button>
   {:else}
     <button class="edit-btn" on:click="{startEdit}">Edit</button>
     <Modal props="{{
@@ -417,7 +415,7 @@
       goFunc: () => {
         $exportOptions.type === 'csv' ? exportCSV() : copyToClipboard();
       }
-      }}"> 
+      }}">
       <div slot="content">
         <select name="" id="exportOptions" bind:value="{$exportOptions.type}">
           <option value="clipboard">Copy to clipboard as a table</option>
@@ -441,6 +439,12 @@
         </div>
       </div>
     </Modal>
+    <Modal props="{{
+      btnText: 'Reset',
+      title: 'Are you sure you want to reset?',
+      goBtn: 'Reset',
+      goFunc: reset,
+    }}" />
   {/if}
 </div>
 
@@ -457,7 +461,7 @@
 		align-self: center;
 		border-radius: 7px;
 	}
-  
+
 	.column {
     display: grid;
     position: relative;
@@ -466,7 +470,7 @@
     border-radius: 7px;
     transition: opacity 0.5s linear visibility 0s;
   }
-  
+
   .header {
     border-bottom: hsl(208, 85%, 64%) solid 1px;
     border-radius: 7px 7px 0 0;
@@ -487,7 +491,7 @@
   input, select {
     border-radius: 7px;
   }
-  
+
   input[type=datetime-local]::-webkit-calendar-picker-indicator {
     filter: invert(var(--invert));
     cursor: pointer;
@@ -557,7 +561,7 @@
   .z-0 {
 		z-index: 0;
 	}
-  
+
   .hide {
     display: none;
   }

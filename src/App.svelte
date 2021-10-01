@@ -5,33 +5,35 @@
 
 	import {
 		showColumns,
-		columnData,
+		columnOrder,
 		darkMode,
 		goalColor,
-		thisWeekData,
+		inputData,
 		fontSize,
 		showTooltips,
+		autoReset,
 		dragged,
-		exportOptions
+		exportOptions,
+		lastStoredSeason
   } from './stores';
 
 	/**
 	 * Last defense date:
 		* input last defense date by number of hours ago
-	 * don't store title text and stuff in localStorage? or add version control?
-	 * Save past seasons - copy as table to clipboard
-		* set starting lift for next season based on total lift from the previous season
-		* set liftGoal based on last season's lift?
+	 * set starting lift for next season based on total lift from the previous season
+	 * set liftGoal based on last season's lift?
 	 */
 
 	$: localStorage.setItem('showColumns', JSON.stringify($showColumns));
-	$: localStorage.setItem('columnData', JSON.stringify($columnData));
-	$: localStorage.setItem('thisWeekData', JSON.stringify($thisWeekData));
+	$: localStorage.setItem('columnOrder', JSON.stringify($columnOrder));
+	$: localStorage.setItem('thisWeekData', JSON.stringify($inputData));
 	$: localStorage.setItem('goalColor', JSON.stringify($goalColor));
 	$: localStorage.setItem('darkMode', JSON.stringify($darkMode));
 	$: localStorage.setItem('fontSize', JSON.stringify($fontSize));
 	$: localStorage.setItem('showTooltips', JSON.stringify($showTooltips));
 	$: localStorage.setItem('exportOptions', JSON.stringify($exportOptions));
+	$: localStorage.setItem('lastStoredSeason', JSON.stringify($lastStoredSeason.valueOf()));
+	$: localStorage.setItem('autoReset', JSON.stringify($autoReset));
 
 	onMount(() => {
 		$darkMode && document.body.classList.add('dark-mode');
@@ -49,6 +51,7 @@
 		title: 'Settings',
 		imageBtn: true,
 		src: 'img/settings-icon.png',
+		closeText: 'Close',
 	}
 
 	// Linear function to limit the header font size to 3.5em so it doesn't go off screen
@@ -76,6 +79,8 @@
 			<label for="fontSizeSlider">Font size: {Math.round($fontSize * 100)}%</label>
 			<br>
 			<button class:active="{!$showTooltips}" on:click="{() => { $showTooltips = !$showTooltips }}">Hide (touch-only) tooltips</button>
+			<br>
+			<button class:active="{$autoReset}" on:click="{() => { $autoReset = !$autoReset }}">Auto reset at end of season</button>
 			<br>
 			<button on:click="{() => localStorage.clear()}">Clear localStorage</button>
 		</div>
