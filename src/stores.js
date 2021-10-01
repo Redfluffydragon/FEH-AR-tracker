@@ -183,6 +183,6 @@ const savedColumns = gotEm('columnOrder', defaultColumnOrder);
 export const columnOrder = writable(savedColumns);
 
 
-export const lastStoredSeason = writable(gotEm('lastStoredSeason', getEndDate().valueOf()));
+export const lastStoredSeason = writable(gotEm('lastStoredSeason', getEndDate()));
 
 export const tiers = [21000, 20800, 20400, 20000, 19600, 19200, 18800, 18400, 18000, 16400, 16000, 13800, 13400, 13000, 12600, 12200, 11800, 11400, 11000, 9400, 8200, 7200, 6500, 6000, 5600, 5200, 4800, 4400, 4000, 3600, 3200, 2800, 2400, 2000, 1600, 1200, 800, 400, 0];

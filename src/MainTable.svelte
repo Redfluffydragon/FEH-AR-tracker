@@ -99,10 +99,10 @@
 
     const now = new Date();
     const LLCTimeLeft = Math.max((lastDefenseDate ? lastDefenseDate.valueOf() + 7.2e+7 - now : 0), 0);
-    const defensesCanLose = (getEndDate().valueOf() - now - LLCTimeLeft);
+    const defensesCanLose = ($lastStoredSeason - now - LLCTimeLeft);
 
     // Subtract one when not-for-display just so it matches LLC time left - don't know why it's like this (modulus probably)
-    return forDisplay ? Math.ceil(defensesCanLose / 7.2e7) : defensesCanLose % 7.2e7 - 1;
+    return Math.max((forDisplay ? Math.ceil(defensesCanLose / 7.2e7) : defensesCanLose % 7.2e7 - 1), 0);
   }
 
   $: calcValues = {
@@ -171,7 +171,7 @@
 
     $data.offensesLeftInSeason = 16;
     $data.lastDefenseDate = null;
-    $lastStoredSeason = getEndDate().valueOf();
+    $lastStoredSeason = getEndDate();
   }
 
 	function updateTimes() {

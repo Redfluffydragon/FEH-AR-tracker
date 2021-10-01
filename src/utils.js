@@ -4,8 +4,9 @@
  */
  export function getEndDate() {
   const now = new Date();
-  const seasonEndDate = new Date();
-  seasonEndDate.setDate(now.getDate() + (7 + 1 - now.getDay()) % 7);
-  seasonEndDate.setHours(17, 0, 0, 0); // have to correct for daylight saving time?
-  return seasonEndDate;
+  const seasonEndDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()));
+  
+  seasonEndDate.setUTCDate(now.getUTCDate() + (7 + 1 - now.getUTCDay()) % 7);
+  seasonEndDate.setUTCHours(23, 0, 0, 0);
+  return seasonEndDate.valueOf();
 }

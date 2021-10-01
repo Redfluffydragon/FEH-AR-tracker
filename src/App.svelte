@@ -18,10 +18,7 @@
   } from './stores';
 
 	/**
-	 * Last defense date:
-		* input last defense date by number of hours ago
-	 * set starting lift for next season based on total lift from the previous season
-	 * set liftGoal based on last season's lift?
+	 * input last defense date by number of hours ago
 	 */
 
 	$: localStorage.setItem('showColumns', JSON.stringify($showColumns));
@@ -32,7 +29,7 @@
 	$: localStorage.setItem('fontSize', JSON.stringify($fontSize));
 	$: localStorage.setItem('showTooltips', JSON.stringify($showTooltips));
 	$: localStorage.setItem('exportOptions', JSON.stringify($exportOptions));
-	$: localStorage.setItem('lastStoredSeason', JSON.stringify($lastStoredSeason.valueOf()));
+	$: localStorage.setItem('lastStoredSeason', JSON.stringify($lastStoredSeason));
 	$: localStorage.setItem('autoReset', JSON.stringify($autoReset));
 
 	onMount(() => {
@@ -110,7 +107,7 @@
 		--btn-bg: rgb(244, 244, 244);
 		--btn-color: rgb(51, 51, 51);
 		--savebtn-bg: rgb(112, 188, 255);
-		--active-highlight: rgb(150, 150, 150);
+		--active-highlight: inset 0 0 15px rgb(150, 150, 150);
 		--transparent-bg: rgba(255, 255, 255, 0.8);
 		--bg-img-src: url('img/BG_Alfheim.png');
 		--invert: 0;
@@ -134,7 +131,7 @@
 		--btn-bg: rgb(30, 30, 30);
 		--btn-color: rgb(255, 255, 255);
 		--savebtn-bg: rgb(24, 77, 201);
-		--active-highlight: rgb(0, 0, 0);
+		--active-highlight: inset 0 0 15px 3px rgb(0, 0, 0);
 		--transparent-bg: rgba(0, 0, 0, 0.8);
 		--bg-img-src: url('img/FEH_Dokkalfheimr.png');
 		--invert: 100%;
@@ -202,7 +199,7 @@
 	}
 
 	.active {
-		box-shadow: inset 0 0 15px 3px var(--active-highlight);
+		box-shadow: var(--active-highlight);
 	}
 
 	.center {
