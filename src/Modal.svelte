@@ -22,10 +22,10 @@
 </script>
 
 <button class="openBtn" class:imgBtn="{props.imageBtn}" on:click="{showHide}">
-  {#if props.imageBtn} 
+  {#if props.imageBtn}
     <img class="icon-img" src="{props.src}" alt="{props.title} button"/>
   {:else}
-    {props.title}
+    {props.btnText || props.title}
   {/if}
 </button>
 
@@ -43,7 +43,7 @@
               showHide();
               }}" class="saveBtn">{props.goBtn}</button>
           {/if}
-            <button on:click="{showHide}" class="closeBtn">Close</button>
+            <button on:click="{showHide}" class="closeBtn">{props.closeText || 'Cancel'}</button>
         </div>
       </slot>
     </div>
