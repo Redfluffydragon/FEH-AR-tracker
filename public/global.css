@@ -55,7 +55,3 @@ input:disabled {
 button:disabled {
 	color: #999;
 }
-
-button:focus {
-	border-color: #666;
-}

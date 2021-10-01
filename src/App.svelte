@@ -19,6 +19,7 @@
 
 	/**
 	 * input last defense date by number of hours ago
+	 * min and max for inputs?
 	 */
 
 	$: localStorage.setItem('showColumns', JSON.stringify($showColumns));
@@ -49,6 +50,7 @@
 		imageBtn: true,
 		src: 'img/settings-icon.png',
 		closeText: 'Close',
+		spinBtn: true,
 	}
 
 	// Linear function to limit the header font size to 3.5em so it doesn't go off screen
@@ -79,6 +81,8 @@
 			<br>
 			<button class:active="{$autoReset}" on:click="{() => { $autoReset = !$autoReset }}">Auto reset at end of season</button>
 			<br>
+			<button>Input last defense by hours ago</button>
+			<br>
 			<button on:click="{() => localStorage.clear()}">Clear localStorage</button>
 		</div>
 	</Modal>
@@ -101,13 +105,16 @@
 	}
 
 	:global(body) {
-		--bg: rgb(255, 255, 255);
+		--bg: #FFFFFF;
 		--color: rgb(0, 0, 0);
 		--heading-color: rgb(0, 0, 0);
+
 		--btn-bg: rgb(244, 244, 244);
 		--btn-color: rgb(51, 51, 51);
 		--savebtn-bg: rgb(112, 188, 255);
-		--active-highlight: inset 0 0 15px rgb(150, 150, 150);
+		--active-highlight: inset 5px 5px 15px rgba(0, 0, 0, 0.3), inset -5px -5px 15px rgba(255, 255, 255, 0.3);
+		--clicked-higlight: inset 0 0 5px rgba(0, 0, 0, 0.5);
+
 		--transparent-bg: rgba(255, 255, 255, 0.8);
 		--bg-img-src: url('img/BG_Alfheim.png');
 		--invert: 0;
@@ -128,10 +135,13 @@
 		--bg: rgb(40, 40, 40);
 		--color: rgb(200, 200, 200);
 		--heading-color: rgb(255, 255, 255);
+		
 		--btn-bg: rgb(30, 30, 30);
 		--btn-color: rgb(255, 255, 255);
 		--savebtn-bg: rgb(24, 77, 201);
-		--active-highlight: inset 0 0 15px 3px rgb(0, 0, 0);
+		--active-highlight: inset 5px 5px 15px rgb(0, 0, 0), inset -5px -5px 15px rgba(187, 187, 187, 0.1);
+		--clicked-higlight: inset 0 0 5px rgb(0, 0, 0), inset 0 0 10px rgb(0, 0, 0);
+
 		--transparent-bg: rgba(0, 0, 0, 0.8);
 		--bg-img-src: url('img/FEH_Dokkalfheimr.png');
 		--invert: 100%;
@@ -158,17 +168,17 @@
 		margin-bottom: 0.5rem;
 	}
 
-	:global(button:hover) {
+	:global(button:not(:active):hover) {
 		filter: brightness(0.95);
 	}
 
 	:global(button:not(:disabled):active) {
 		filter: brightness(0.85);
+		box-shadow: var(--clicked-higlight);
 	}
 
 	:global(.saveBtn) {
 		background: var(--savebtn-bg);
-		border: 2px solid var(--savebtn-bg);
 	}
 
 	main {
