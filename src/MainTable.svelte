@@ -123,7 +123,56 @@
 		timeToFewerDefenses: getTimeToFewerDef($data.lastDefenseDate),
 		defensesCanLose: getDefCanLose($data.lastDefenseDate),
   }
-  let testDate;
+  
+  function reset() {
+    if ($data.totalLift >= 20800) {
+      $data.totalLift = 18000;
+      $data.liftGoal = 20800;
+    }
+    else if ($data.totalLift > 16000) {
+      $data.totalLift = 11800;
+      $data.liftGoal = 13400;
+    }
+    else if ($data.totalLift >= 13400) {
+      $data.totalLift = 18000;
+      $data.liftGoal = 20800;
+    }
+    else if ($data.totalLift >= 11000) {
+      $data.totalLift = 11000;
+      $data.liftGoal = 13400;
+    }
+    else if ($data.totalLift >= 9400) {
+      $data.totalLift = 9400;
+      $data.liftGoal = 11000;
+    }
+    else if ($data.totalLift >= 8200) {
+      $data.totalLift = 8200;
+      $data.liftGoal = 9400;
+    }
+    else if ($data.totalLift >= 7200) {
+      $data.totalLift = 7200;
+      $data.liftGoal = 8200;
+    }
+    else if ($data.totalLift >= 6500) {
+      $data.totalLift = 6500;
+      $data.liftGoal = 7200;
+    }
+    else if ($data.totalLift >= 6000) {
+      $data.totalLift = 6000;
+      $data.liftGoal = 6500;
+    }
+    else if ($data.totalLift >= 4400) {
+      $data.totalLift = Math.floor($data.totalLift / 400);
+      $data.liftGoal = $data.totalLift + 400;
+    }
+    else {
+      $data.liftGoal = Math.floor($data.totalLift / 400) + 400;
+    }
+
+    $data.offensesLeftInSeason = 16;
+    $data.lastDefenseDate = null;
+    $lastStoredSeason = getEndDate().valueOf();
+  }
 
 	function updateTimes() {
     // Don't update when editing, it makes everything freeze
@@ -132,19 +181,17 @@
 		calcValues.LLCTimeLeft = parseTime(getLLCTimeLeft($data.lastDefenseDate));
 		calcValues.timeToFewerDefenses = getTimeToFewerDef($data.lastDefenseDate);
 		calcValues.defensesCanLose = getDefCanLose($data.lastDefenseDate);
-    // calcValues.seasonEndDate = parseDate(getEndDate());
 
     season = getSeason(new Date($lastStoredSeason - 1000));
 
     const now  = new Date();
-    if ($autoReset && now.valueOf() + testDate > $lastStoredSeason) {
+    if ($autoReset && now.valueOf() > $lastStoredSeason) {
       reset();
     }
 	}
 
 	onMount(() => {
 		updateTimes();
-    testDate = $lastStoredSeason.valueOf() - (new Date()).valueOf() - 10e3;
 	});
 
   // For editing: drag-n-drop and show/hide columns
@@ -289,56 +336,6 @@
       alert(`Error: ${e}. Could not copy to clipboard.`)
     }
     table.remove();
-  }
-
-  function reset() {
-    if ($data.totalLift >= 20800) {
-      $data.totalLift = 18000;
-      $data.liftGoal = 20800;
-    }
-    else if ($data.totalLift > 16000) {
-      $data.totalLift = 11800;
-      $data.liftGoal = 13400;
-    }
-    else if ($data.totalLift >= 13400) {
-      $data.totalLift = 18000;
-      $data.liftGoal = 20800;
-    }
-    else if ($data.totalLift >= 11000) {
-      $data.totalLift = 11000;
-      $data.liftGoal = 13400;
-    }
-    else if ($data.totalLift >= 9400) {
-      $data.totalLift = 9400;
-      $data.liftGoal = 11000;
-    }
-    else if ($data.totalLift >= 8200) {
-      $data.totalLift = 8200;
-      $data.liftGoal = 9400;
-    }
-    else if ($data.totalLift >= 7200) {
-      $data.totalLift = 7200;
-      $data.liftGoal = 8200;
-    }
-    else if ($data.totalLift >= 6500) {
-      $data.totalLift = 6500;
-      $data.liftGoal = 7200;
-    }
-    else if ($data.totalLift >= 6000) {
-      $data.totalLift = 6000;
-      $data.liftGoal = 6500;
-    }
-    else if ($data.totalLift >= 4400) {
-      $data.totalLift = Math.floor($data.totalLift / 400);
-      $data.liftGoal = $data.totalLift + 400;
-    }
-    else {
-      $data.liftGoal = Math.floor($data.totalLift / 400) + 400;
-    }
-
-    $data.offensesLeftInSeason = 16;
-    $data.lastDefenseDate = null;
-    $lastStoredSeason = getEndDate().valueOf();
   }
 </script>
 
