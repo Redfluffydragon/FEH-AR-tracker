@@ -436,12 +436,14 @@
         </div>
       </div>
     </Modal>
-    <Modal props="{{
-      btnText: 'Reset',
-      title: 'Are you sure you want to reset?',
-      goBtn: 'Reset',
-      goFunc: reset,
-    }}" />
+    {#if new Date().valueOf() > $lastStoredSeason}
+      <Modal props="{{
+        btnText: 'Reset',
+        title: 'Are you sure you want to reset?',
+        goBtn: 'Reset',
+        goFunc: reset,
+      }}" />
+    {/if}
   {/if}
 </div>
 
