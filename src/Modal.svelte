@@ -21,7 +21,7 @@
   }, false);
 </script>
 
-<button class="openBtn" class:imgBtn="{props.imageBtn}" on:click="{showHide}">
+<button class="openBtn" class:imgBtn="{props.imageBtn}" class:spinBtn="{props.spinBtn}" class:spinOpen="{(show && props.spinBtn)}" on:click="{showHide}">
   {#if props.imageBtn}
     <img class="icon-img" src="{props.src}" alt="{props.title} button"/>
   {:else}
@@ -41,7 +41,7 @@
             <button on:click="{() => {
               props.goFunc();
               showHide();
-              }}" class="saveBtn">{props.goBtn}</button>
+              }}" class="saveBtn biggerBtn">{props.goBtn}</button>
           {/if}
             <button on:click="{showHide}" class="closeBtn">{props.closeText || 'Cancel'}</button>
         </div>
@@ -62,12 +62,29 @@
     background-color: transparent;
     border-radius: 50%;
     padding: 0;
+    transition: transform 0.3s;
+  }
+
+  .imgBtn:not(:disabled):active {
+    box-shadow: none;
+  }
+
+  .spinBtn:not(:disabled):active {
+    transform: rotate(30deg);
+  }
+
+  .spinOpen {
+    transform: rotate(60deg);
   }
 
   .icon-img {
     width: 100%;
     height: 100%;
     filter: invert(var(--invert));
+  }
+
+  .biggerBtn {
+    padding: 9px 12px;
   }
 
   .closeBtn {
