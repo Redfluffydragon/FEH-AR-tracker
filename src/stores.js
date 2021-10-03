@@ -56,6 +56,7 @@ export const showTooltips = writable(savedShowTooltips);
 const savedAutoReset = gotEm('autoReset', false);
 export const autoReset = writable(savedAutoReset);
 
+
 const savedExportOptions = gotEm('exportOptions', {
   type: 'clipboard',
   onlyShown: false,
@@ -80,6 +81,7 @@ const defaultShow = {
   maxLift: true,
   minLift: true,
   defenseMargin: true,
+  liftMargin: true,
   defensesCanLose: true,
   timeToFewerDefenses: true,
   lastDefenseDate: true,
@@ -137,6 +139,10 @@ export const columnData = {
     name: 'Defense Margin',
     title: 'The number of full defense losses you can take and still make your goal, assuming perfect offense',
   },
+  liftMargin: {
+    name: 'Lift Margin',
+    title: 'How much lift you will be over your goal assuming perfect offense and maximum defense lift loss',
+  },
   defensesCanLose: {
     name: 'Defenses Can Lose',
     title: 'The number of defenses it is possible for you to lose lift on, based on the date of the last non-LLC defense you had',
@@ -147,7 +153,7 @@ export const columnData = {
   },
   lastDefenseDate: {
     name: 'Last non-LLC Defense',
-    title: 'The date and time of the last defense you had that was not covered by lift loss control',
+    title: 'How long ago the last defense you had that was not covered by lift loss control was',
   },
   LLCTimeLeft: {
     name: 'LLC Time Left',
@@ -171,11 +177,12 @@ const defaultColumnOrder = [
   { id: 8, value: 'maxLift' },
   { id: 9, value: 'minLift' },
   { id: 10, value: 'defenseMargin' },
-  { id: 11, value: 'defensesCanLose' },
-  { id: 12, value: 'timeToFewerDefenses' },
-  { id: 13, value: 'lastDefenseDate', userInput: true },
-  { id: 14, value: 'LLCTimeLeft' },
-  { id: 15, value: 'liftGoal', userInput: true },
+  { id: 11, value: 'liftMargin' },
+  { id: 12, value: 'defensesCanLose' },
+  { id: 13, value: 'timeToFewerDefenses' },
+  { id: 14, value: 'lastDefenseDate', userInput: true },
+  { id: 15, value: 'LLCTimeLeft' },
+  { id: 16, value: 'liftGoal', userInput: true },
 ];
 
 const savedColumns = gotEm('columnOrder', defaultColumnOrder);
