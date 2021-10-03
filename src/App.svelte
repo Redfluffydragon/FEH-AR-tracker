@@ -18,8 +18,8 @@
   } from './stores';
 
 	/**
-	 * input last defense date by number of hours ago
 	 * min and max for inputs?
+	 * replace settings png with svg?
 	 */
 
 	$: localStorage.setItem('showColumns', JSON.stringify($showColumns));
@@ -67,21 +67,17 @@
 				$goalColor = !$goalColor;
 			}}">Color display for goal</button>
 			<br>
-			<button class:active="{$darkMode}" on:click="{
-				() => {
-					$darkMode ? document.body.classList.remove('dark-mode') : document.body.classList.add('dark-mode');
+			<button class:active="{$darkMode}" on:click="{() => {
+					document.body.classList.toggle('dark-mode');
 					$darkMode = !$darkMode;
-				}
-			}">Dark mode</button>
+			}}">Dark mode</button>
 			<br>
 			<input type="range" min=1 max=1.5 step=0.05 id="fontSizeSlider" bind:value="{$fontSize}">
 			<label for="fontSizeSlider">Font size: {Math.round($fontSize * 100)}%</label>
 			<br>
-			<button class:active="{!$showTooltips}" on:click="{() => { $showTooltips = !$showTooltips }}">Hide (touch-only) tooltips</button>
+			<button class:active="{!$showTooltips}" on:click="{() => $showTooltips = !$showTooltips}">Hide (touch-only) tooltips</button>
 			<br>
-			<button class:active="{$autoReset}" on:click="{() => { $autoReset = !$autoReset }}">Auto reset at end of season</button>
-			<br>
-			<button>Input last defense by hours ago</button>
+			<button class:active="{$autoReset}" on:click="{() => $autoReset = !$autoReset}">Auto reset at end of season</button>
 			<br>
 			<button on:click="{() => localStorage.clear()}">Clear localStorage</button>
 		</div>
