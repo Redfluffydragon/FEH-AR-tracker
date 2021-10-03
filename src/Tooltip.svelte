@@ -17,7 +17,7 @@
         return;
       }
 
-      if (e.target.closest(`#${props.id}`)) {
+      if (e.target.closest(`#${props.id}`) && !e.target.matches('input')) {
         show = !show;
       }
       else {
