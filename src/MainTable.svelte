@@ -5,6 +5,7 @@
 	import { dndzone } from 'svelte-dnd-action';
   import Tooltip from './Tooltip.svelte';
 	import Modal from './Modal.svelte';
+  import DurationInput from "./DurationInput.svelte";
 
 	import {
     dataKeys,
@@ -21,19 +22,7 @@
     tiers
   } from './stores';
 
-  import { getEndDate } from "./utils";
-
-  /**
-   * Take a duration in milliseconds and convert it to hh:mm:ss format
-   * @param {A duration in milliseconds} milliseconds
-   * @returns A time string
-   */
-  function parseTime(milliseconds) {
-    const hours = Math.floor(milliseconds / 3600000);
-    const minutes = ('0' + Math.floor((milliseconds % 3600000) / 60000)).slice(-2);
-    const seconds = ('0' + Math.floor((milliseconds % 60000) / 1000)).slice(-2);
-    return `${hours}:${minutes}:${seconds}`;
-  }
+  import { getEndDate, parseTime } from "./utils";
 
   /**
    * Convert a time in milliseconds to a human-readable string
@@ -55,8 +44,7 @@
 			return 0;
 		}
 		lastDefenseDate = new Date(lastDefenseDate);
-		const now = new Date();
-		return Math.max((lastDefenseDate.valueOf() + 7.2e+7 - now), 0);
+		return Math.max((lastDefenseDate.getTime() + 7.2e+7 - new Date()), 0);
 	}
 
   /**
@@ -115,15 +103,17 @@
     defenseMargin:
       Math.max(Math.floor(($data.liftGainPerOffense[season] * $data.offensesLeftInSeason + $data.totalLift - $data.liftGoal)
       / $data.liftLossPerDefense[season]), 0),
+    liftMargin: (($data.totalLift + $data.liftGainPerOffense[season] * $data.offensesLeftInSeason)
+      - $data.liftLossPerDefense[season] * getDefCanLose($data.lastDefenseDate)) - $data.liftGoal,
     maxLift: $data.totalLift + $data.liftGainPerOffense[season] * $data.offensesLeftInSeason,
-    minLift:
+    minLift: 
       ($data.totalLift + $data.liftGainPerOffense[season] * $data.offensesLeftInSeason)
       - $data.liftLossPerDefense[season] * getDefCanLose($data.lastDefenseDate),
     LLCTimeLeft: parseTime(getLLCTimeLeft($data.lastDefenseDate)),
 		timeToFewerDefenses: getTimeToFewerDef($data.lastDefenseDate),
 		defensesCanLose: getDefCanLose($data.lastDefenseDate),
   }
-  
+
   function reset() {
     if ($data.totalLift >= 20800) {
       $data.totalLift = 18000;
@@ -172,20 +162,20 @@
     $data.offensesLeftInSeason = 16;
     $data.lastDefenseDate = null;
     $lastStoredSeason = getEndDate();
+    season = getSeason(new Date($lastStoredSeason - 1000));
   }
 
 	function updateTimes() {
     // Don't update when editing, it makes everything freeze
 		!$edit && requestAnimationFrame(updateTimes);
 
+    const now  = Date.now();
+
 		calcValues.LLCTimeLeft = parseTime(getLLCTimeLeft($data.lastDefenseDate));
 		calcValues.timeToFewerDefenses = getTimeToFewerDef($data.lastDefenseDate);
 		calcValues.defensesCanLose = getDefCanLose($data.lastDefenseDate);
 
-    season = getSeason(new Date($lastStoredSeason - 1000));
-
-    const now  = new Date();
-    if ($autoReset && now.valueOf() > $lastStoredSeason) {
+    if ($autoReset && now > $lastStoredSeason) {
       reset();
     }
 	}
@@ -356,7 +346,7 @@
           <div id="{item.value + 'Cell'}" in:fly="{{y: -30}}" class="dataCell centerFlex {item.value + 'Cell'}">
             {#if item.userInput}
               {#if item.value === 'lastDefenseDate'}
-                <input type="datetime-local" class="dateInput" bind:value="{$data[item.value]}">
+                <DurationInput bind:lastDefenseDate="{$data.lastDefenseDate}" />
               {:else if
                 item.value === 'totalLift' ||
                 item.value === 'offensesLeftInSeason'}
@@ -436,7 +426,7 @@
         </div>
       </div>
     </Modal>
-    {#if new Date().valueOf() > $lastStoredSeason}
+    {#if new Date().getTime() > $lastStoredSeason}
       <Modal props="{{
         btnText: 'Reset',
         title: 'Are you sure you want to reset?',
@@ -491,11 +481,6 @@
     border-radius: 7px;
   }
 
-  input[type=datetime-local]::-webkit-calendar-picker-indicator {
-    filter: invert(var(--invert));
-    cursor: pointer;
-  }
-
   input[type=number]::-webkit-inner-spin-button {
     opacity: 1;
   }
@@ -508,10 +493,6 @@
   .dateInput {
 		width: 23.5ch;
 	}
-
-  #lastDefenseDateColumn {
-    grid-column: auto / span 2;
-  }
 
   .liftToGoalCell {
     background: var(--goal-lift-bg);
