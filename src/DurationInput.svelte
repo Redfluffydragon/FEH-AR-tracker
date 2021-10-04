@@ -26,7 +26,17 @@
         i.value = '00';
       }
     }
-    lastDefenseDate = Date.now() - toMs(inputs[0].value, inputs[1].value, inputs[2].value);
+    const zero = parseInt(parsedDuration.join('').replace(/-/g, ''));
+
+    if (zero === 0) {
+      for (let i of inputs) {
+        i.value = '--';
+      }
+      lastDefenseDate = null;
+    }
+    else {
+      lastDefenseDate = Date.now() - toMs(inputs[0].value, inputs[1].value, inputs[2].value);
+    }
     update();
   }
 
