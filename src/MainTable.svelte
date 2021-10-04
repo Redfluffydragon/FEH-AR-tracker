@@ -103,8 +103,8 @@
     defenseMargin:
       Math.max(Math.floor(($data.liftGainPerOffense[season] * $data.offensesLeftInSeason + $data.totalLift - $data.liftGoal)
       / $data.liftLossPerDefense[season]), 0),
-    liftMargin: (($data.totalLift + $data.liftGainPerOffense[season] * $data.offensesLeftInSeason)
-      - $data.liftLossPerDefense[season] * getDefCanLose($data.lastDefenseDate)) - $data.liftGoal,
+    liftMargin: Math.max((($data.totalLift + $data.liftGainPerOffense[season] * $data.offensesLeftInSeason)
+      - $data.liftLossPerDefense[season] * getDefCanLose($data.lastDefenseDate)) - $data.liftGoal, 0),
     maxLift: $data.totalLift + $data.liftGainPerOffense[season] * $data.offensesLeftInSeason,
     minLift: 
       ($data.totalLift + $data.liftGainPerOffense[season] * $data.offensesLeftInSeason)
@@ -232,6 +232,8 @@
   $: goodColor = $darkMode ? 'rgb(0, 80, 0)' : 'rgb(117, 255, 117)';
   $: badColor = $darkMode ? 'rgb(80, 0, 0)' : 'rgb(255, 100, 100)';
 
+  $: maxLiftCheck = calcValues.maxLift < $data.liftGoal;
+
   $: document.body.style.setProperty('--goal-lift-bg',
     calcValues.liftToGoal <= 0 && $goalColor ? goodColor : 'var(--bg)');
   $: document.body.style.setProperty('--goal-offenses-bg',
@@ -239,9 +241,9 @@
   $: document.body.style.setProperty('--goal-min-lift-bg',
     calcValues.minLift >= $data.liftGoal && $goalColor ? goodColor : 'var(--bg)');
   $: document.body.style.setProperty('--goal-defense-margin-bg',
-    calcValues.defenseMargin >= calcValues.defensesCanLose && $goalColor ? goodColor : 'var(--bg)');
+    calcValues.defenseMargin >= calcValues.defensesCanLose && !maxLiftCheck &&  $goalColor ? goodColor : 'var(--bg)');
   $: document.body.style.setProperty('--goal-max-lift-bg',
-    calcValues.maxLift < $data.liftGoal && $goalColor ? badColor : 'var(--bg)');
+    maxLiftCheck && $goalColor ? badColor : 'var(--bg)');
 
   // For exporting
   function getAllData() {
