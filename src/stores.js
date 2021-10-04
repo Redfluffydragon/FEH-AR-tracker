@@ -104,20 +104,27 @@ export const columnData = {
   totalLift: {
     name: 'Total Lift',
     title: '',
+    userInput: true,
+    min: 0,
+    max: 21680, // Double check this
   },
   liftGainPerOffense: {
     name: 'Lift Gain per Offense',
     title: 'Lift gain per single offense - saves separately for both seasons',
+    userInput: true,
+    min: 100,
+    max: 220,
   },
   liftLossPerDefense: {
-    name: 'Lift to Goal',
-    title: '',
+    name: 'Lift Loss per Defense',
+    title: 'Lift loss per full defense loss',
+    userInput: true,
     min: 20,
     max: 100,
   },
   liftToGoal: {
-    name: 'Lift Loss per Defense',
-    title: 'Lift loss per full defense loss',
+    name: 'Lift to Goal',
+    title: '',
   },
   offensesToGoal: {
     name: 'Offenses to Goal',
@@ -126,6 +133,9 @@ export const columnData = {
   offensesLeftInSeason: {
     name: 'Offenses Left',
     title: 'Number of single offense matches possible to play (16 is the most possible in a single season)',
+    userInput: true,
+    min: 0,
+    max: 16,
   },
   maxLift: {
     name: 'Max lift',
@@ -154,6 +164,7 @@ export const columnData = {
   lastDefenseDate: {
     name: 'Last non-LLC Defense',
     title: 'How long ago the last defense you had that was not covered by lift loss control was',
+    userInput: true,
   },
   LLCTimeLeft: {
     name: 'LLC Time Left',
@@ -162,27 +173,28 @@ export const columnData = {
   liftGoal: {
     name: 'Goal',
     title: '',
+    userInput: true,
   },
 };
 
 const defaultColumnOrder = [
   { id: 0, value: 'season' },
   { id: 1, value: 'seasonEndDate' },
-  { id: 2, value: 'totalLift', userInput: true },
-  { id: 3, value: 'liftGainPerOffense', userInput: true },
-  { id: 4, value: 'liftLossPerDefense', userInput: true },
+  { id: 2, value: 'totalLift' },
+  { id: 3, value: 'liftGainPerOffense' },
+  { id: 4, value: 'liftLossPerDefense' },
   { id: 5, value: 'liftToGoal' },
   { id: 6, value: 'offensesToGoal' },
-  { id: 7, value: 'offensesLeftInSeason', userInput: true },
+  { id: 7, value: 'offensesLeftInSeason' },
   { id: 8, value: 'maxLift' },
   { id: 9, value: 'minLift' },
   { id: 10, value: 'defenseMargin' },
   { id: 11, value: 'liftMargin' },
   { id: 12, value: 'defensesCanLose' },
   { id: 13, value: 'timeToFewerDefenses' },
-  { id: 14, value: 'lastDefenseDate', userInput: true },
+  { id: 14, value: 'lastDefenseDate' },
   { id: 15, value: 'LLCTimeLeft' },
-  { id: 16, value: 'liftGoal', userInput: true },
+  { id: 16, value: 'liftGoal' },
 ];
 
 const savedColumns = gotEm('columnOrder', defaultColumnOrder);
