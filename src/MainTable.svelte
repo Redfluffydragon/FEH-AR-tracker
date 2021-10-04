@@ -344,13 +344,13 @@
         </div>
         {#if !$edit}
           <div id="{item.value + 'Cell'}" in:fly="{{y: -30}}" class="dataCell centerFlex {item.value + 'Cell'}">
-            {#if item.userInput}
+            {#if columnData[item.value].userInput}
               {#if item.value === 'lastDefenseDate'}
                 <DurationInput bind:lastDefenseDate="{$data.lastDefenseDate}" />
               {:else if
                 item.value === 'totalLift' ||
                 item.value === 'offensesLeftInSeason'}
-                <input type="number" pattern="[0-9]*" class="thisSeasonInput" bind:value="{$data[item.value]}">
+                <input type="number" pattern="[0-9]*" class="thisSeasonInput" min="{columnData[item.value].min}" max="{columnData[item.value].max}" bind:value="{$data[item.value]}">
               {:else if item.value === 'liftGoal'}
                 <select name="liftGoal" id="liftGoalInput" bind:value="{$data[item.value]}">
                   {#each tiers as tier, i(i)}
@@ -358,7 +358,7 @@
                   {/each}
                 </select>
               {:else if item.value === 'liftGainPerOffense' || item.value === 'liftLossPerDefense'}
-                <input type="number" pattern="[0-9]*" class="thisSeasonInput" bind:value="{$data[item.value][season]}">
+                <input type="number" pattern="[0-9]*" class="thisSeasonInput" min="{columnData[item.value].min}" max="{columnData[item.value].max}" bind:value="{$data[item.value][season]}">
               {/if}
             {:else}
               {#if item.value === 'season'}
