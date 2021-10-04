@@ -17,11 +17,6 @@
 		lastStoredSeason
   } from './stores';
 
-	/**
-	 * min and max for inputs?
-	 * replace settings png with svg?
-	 */
-
 	$: localStorage.setItem('showColumns', JSON.stringify($showColumns));
 	$: localStorage.setItem('columnOrder', JSON.stringify($columnOrder));
 	$: localStorage.setItem('thisWeekData', JSON.stringify($inputData));
@@ -63,7 +58,7 @@
 <div class="settings">
 	<Modal props="{settingsProps}">
 		<div slot="content" class="center fullWidth">
-			<button class:active="{$goalColor}" on:click="{() => {
+			<button class:active="{$goalColor}" title="Highlight green or red depending on if you can make your goal or not" on:click="{() => {
 				$goalColor = !$goalColor;
 			}}">Color display for goal</button>
 			<br>
@@ -75,11 +70,14 @@
 			<input type="range" min=1 max=1.5 step=0.05 id="fontSizeSlider" bind:value="{$fontSize}">
 			<label for="fontSizeSlider">Font size: {Math.round($fontSize * 100)}%</label>
 			<br>
-			<button class:active="{!$showTooltips}" on:click="{() => $showTooltips = !$showTooltips}">Hide (touch-only) tooltips</button>
+			<button class:active="{!$showTooltips}" title="The tooltips display the title text when you tap columns" on:click="{() => $showTooltips = !$showTooltips}">Hide (touch-only) tooltips</button>
 			<br>
 			<button class:active="{$autoReset}" on:click="{() => $autoReset = !$autoReset}">Auto reset at end of season</button>
 			<br>
-			<button on:click="{() => localStorage.clear()}">Clear localStorage</button>
+			<br>
+			<span class="info">Last updated 2021-10-4.</span>
+			<br>
+			<span>View source and report bugs on <a href="https://github.com/Redfluffydragon/FEH-AR-tracker">GitHub</a>.</span>
 		</div>
 	</Modal>
 </div>
@@ -88,9 +86,6 @@
 	<h1>Fire Emblem Heroes | Aether Raids lift calculator</h1>
 
 	<MainTable />
-
-	<br>
-	<br>
 </main>
 
 <style>
@@ -181,7 +176,7 @@
 		padding: 1rem;
 		width: 100%;
 		gap: 1rem;
-		min-height: 100%;
+		/* min-height: 100%; */
 		box-sizing: border-box;
 		flex-flow: column;
 		display: flex;
@@ -202,6 +197,14 @@
 	.settings {
 		padding: 1rem;
 		position: absolute;
+	}
+
+	.info {
+		/* text-align: center; */
+		/* bottom: 0; */
+		padding: 5px;
+		box-sizing: border-box;
+		/* background: var(--bg); */
 	}
 
 	.active {
