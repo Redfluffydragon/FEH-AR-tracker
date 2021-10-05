@@ -262,11 +262,13 @@
     const dataRow = [];
     for (let i of $columnOrder) {
       if (!$exportOptions.onlyShown || ($exportOptions.onlyShown && $showColumns[i.value])) {
-        if (i.value === 'lastDefenseDate' ||
-          i.value === 'totalLift' ||
+        if (i.value === 'totalLift' ||
           i.value === 'offensesLeftInSeason' ||
           i.value === 'liftGoal') {
           dataRow.push($data[i.value]);
+        }
+        else if (i.value === 'lastDefenseDate') {
+          dataRow.push(parseTime(Date.now() - $data[i.value]));
         }
         else if (i.value === 'liftGainPerOffense' || i.value === 'liftLossPerDefense') {
           dataRow.push($data[i.value][season]);
