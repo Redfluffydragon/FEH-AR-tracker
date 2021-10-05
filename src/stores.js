@@ -56,6 +56,9 @@ export const showTooltips = writable(savedShowTooltips);
 const savedAutoReset = gotEm('autoReset', false);
 export const autoReset = writable(savedAutoReset);
 
+const savedNoBackground = gotEm('noBackground', false);
+export const noBackground = writable(savedNoBackground);
+
 
 const savedExportOptions = gotEm('exportOptions', {
   type: 'clipboard',

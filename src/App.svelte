@@ -14,7 +14,8 @@
 		autoReset,
 		dragged,
 		exportOptions,
-		lastStoredSeason
+		lastStoredSeason,
+		noBackground
   } from './stores';
 
 	$: localStorage.setItem('showColumns', JSON.stringify($showColumns));
@@ -27,6 +28,7 @@
 	$: localStorage.setItem('exportOptions', JSON.stringify($exportOptions));
 	$: localStorage.setItem('lastStoredSeason', JSON.stringify($lastStoredSeason));
 	$: localStorage.setItem('autoReset', JSON.stringify($autoReset));
+	$: localStorage.setItem('noBackground', JSON.stringify($noBackground));
 
 	onMount(() => {
 		$darkMode && document.body.classList.add('dark-mode');
@@ -53,7 +55,7 @@
 	$: document.body.style.setProperty('--font-size', $fontSize);
 
 </script>
-<div class="background"></div>
+<div class="background" class:none="{$noBackground}"></div>
 
 <div class="settings">
 	<Modal props="{settingsProps}">
@@ -73,6 +75,8 @@
 			<button class:active="{!$showTooltips}" title="The tooltips display the title text when you tap columns" on:click="{() => $showTooltips = !$showTooltips}">Hide (touch-only) tooltips</button>
 			<br>
 			<button class:active="{$autoReset}" on:click="{() => $autoReset = !$autoReset}">Auto reset at end of season</button>
+			<br>
+			<button class:active="{$noBackground}" on:click="{() => $noBackground = !$noBackground}">No background (loads faster)</button>
 			<br>
 			<br>
 			<span class="info">Last updated 2021-10-4.</span>
@@ -176,7 +180,6 @@
 		padding: 1rem;
 		width: 100%;
 		gap: 1rem;
-		/* min-height: 100%; */
 		box-sizing: border-box;
 		flex-flow: column;
 		display: flex;
@@ -200,15 +203,16 @@
 	}
 
 	.info {
-		/* text-align: center; */
-		/* bottom: 0; */
 		padding: 5px;
 		box-sizing: border-box;
-		/* background: var(--bg); */
 	}
 
 	.active {
 		box-shadow: var(--active-highlight);
+	}
+
+	.none {
+		display: none;
 	}
 
 	.center {
