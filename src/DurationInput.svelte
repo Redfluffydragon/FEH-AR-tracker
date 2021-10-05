@@ -1,5 +1,6 @@
 <script>
-  export let lastDefenseDate;
+  export let duration;
+  export let name;
 
   import { onMount } from "svelte";
   import { parseTime } from "./utils";
@@ -32,10 +33,10 @@
       for (let i of inputs) {
         i.value = '--';
       }
-      lastDefenseDate = null;
+      duration = null;
     }
     else {
-      lastDefenseDate = Date.now() - toMs(inputs[0].value, inputs[1].value, inputs[2].value);
+      duration = Date.now() - toMs(inputs[0].value, inputs[1].value, inputs[2].value);
     }
     update();
   }
@@ -69,15 +70,15 @@
       }
     }
     
-    lastDefenseDate = Date.now() - toMs(inputs[0].value, inputs[1].value, inputs[2].value);
+    duration = Date.now() - toMs(inputs[0].value, inputs[1].value, inputs[2].value);
   }
 
   function update() {
     !document.activeElement.matches('.time') && requestAnimationFrame(update);
-    parsedDuration = lastDefenseDate ? parseTime(Date.now() - lastDefenseDate, true, true) : ['--', '--', '--'];
+    parsedDuration = duration ? parseTime(Date.now() - duration, true, true) : ['--', '--', '--'];
   }
 
-  let parsedDuration = lastDefenseDate ? parseTime(Date.now() - lastDefenseDate, true) : ['--', '--', '--'];
+  let parsedDuration = duration ? parseTime(Date.now() - duration, true) : ['--', '--', '--'];
   let inputs;
 
   onMount(() => {
@@ -88,9 +89,9 @@
 
 
 <div class="wrapper">
-  <input class="hours time" on:focusin="{focusIn}" on:input="{input}" on:focusout="{focusOut}" bind:value="{parsedDuration[0]}" pattern="[0-9]*" maxlength="2"
-  />:<input class="minutes time" on:focusin="{focusIn}" on:input="{input}" on:focusout="{focusOut}" bind:value="{parsedDuration[1]}" pattern="[0-9]*" maxlength="3" 
-  />:<input class="seconds time" on:focusin="{focusIn}" on:input="{input}" on:focusout="{focusOut}" bind:value="{parsedDuration[2]}" pattern="[0-9]*" maxlength="3" />
+  <input class="hours time" name="{name} Hours" on:focusin="{focusIn}" on:input="{input}" on:focusout="{focusOut}" bind:value="{parsedDuration[0]}" pattern="[0-9]*" maxlength="2"
+  />:<input class="minutes time" name="{name} Minutes" on:focusin="{focusIn}" on:input="{input}" on:focusout="{focusOut}" bind:value="{parsedDuration[1]}" pattern="[0-9]*" maxlength="3" 
+  />:<input class="seconds time" name="{name} Seconds" on:focusin="{focusIn}" on:input="{input}" on:focusout="{focusOut}" bind:value="{parsedDuration[2]}" pattern="[0-9]*" maxlength="3" />
 </div>
 
 <style>

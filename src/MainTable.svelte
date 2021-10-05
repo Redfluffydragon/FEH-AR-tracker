@@ -350,19 +350,19 @@
           <div id="{item.value + 'Cell'}" in:fly="{{y: -30}}" class="dataCell centerFlex {item.value + 'Cell'}">
             {#if columnData[item.value].userInput}
               {#if item.value === 'lastDefenseDate'}
-                <DurationInput bind:lastDefenseDate="{$data.lastDefenseDate}" />
+                <DurationInput bind:duration="{$data.lastDefenseDate}" name="{columnData[item.value].name}" />
               {:else if
                 item.value === 'totalLift' ||
                 item.value === 'offensesLeftInSeason'}
-                <input type="number" pattern="[0-9]*" class="thisSeasonInput" min="{columnData[item.value].min}" max="{columnData[item.value].max}" bind:value="{$data[item.value]}">
+                <input type="number" name="{columnData[item.value].name}" pattern="[0-9]*" class="thisSeasonInput" min="{columnData[item.value].min}" max="{columnData[item.value].max}" bind:value="{$data[item.value]}">
               {:else if item.value === 'liftGoal'}
                 <select name="liftGoal" id="liftGoalInput" bind:value="{$data[item.value]}">
                   {#each tiers as tier, i(i)}
-                    <option value="{tier}">Tier {tiers.length - i}</option>
+                    <option value="{tier}" name="{columnData[item.value].name}">Tier {tiers.length - i}</option>
                   {/each}
                 </select>
               {:else if item.value === 'liftGainPerOffense' || item.value === 'liftLossPerDefense'}
-                <input type="number" pattern="[0-9]*" class="thisSeasonInput" min="{columnData[item.value].min}" max="{columnData[item.value].max}" bind:value="{$data[item.value][season]}">
+                <input type="number" name="{columnData[item.value].name}" pattern="[0-9]*" class="thisSeasonInput" min="{columnData[item.value].min}" max="{columnData[item.value].max}" bind:value="{$data[item.value][season]}">
               {/if}
             {:else}
               {#if item.value === 'season'}
